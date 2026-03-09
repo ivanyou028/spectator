@@ -1,9 +1,11 @@
-import { generateText, type LanguageModel } from 'ai'
+import { generateText, streamText as aiStreamText, type LanguageModel } from 'ai'
 import { GenerationError } from './errors.js'
 import { buildSceneAnalysisPrompt, buildScenePrompt, buildSummaryPrompt, buildSystemPrompt } from './prompt.js'
 import type { PromptContext } from './prompt.js'
 import { resolveModel, type ProviderConfig } from './provider.js'
 import { Scene } from './scene.js'
+import { StoryStream } from './stream.js'
+import type { StreamEvent } from './stream.js'
 import { Story } from './story.js'
 import { Character } from './character.js'
 import { Plot } from './plot.js'
@@ -199,6 +201,130 @@ export class Engine {
       scenes.push(sceneData)
       const scene = new Scene(sceneData)
       yield scene
+    }
+
+    return new Story({
+      scenes,
+      world: parsed.world,
+      characters: parsed.characters,
+      plot: parsed.plot,
+      createdAt: new Date().toISOString(),
+    })
+  }
+
+  streamText(input: GenerateInput): StoryStream {
+    return new StoryStream(this._streamTokensGenerator(input))
+  }
+
+  private async *_streamTokensGenerator(
+    input: GenerateInput
+  ): AsyncGenerator<StreamEvent, Story, undefined> {
+    const parsed = this.parseInput(input)
+    const model = await this.getModel()
+    const temperature = this.options.temperature ?? 0.8
+    const maxTokens = this.options.maxTokens ?? 2048
+
+    const beats: BeatData[] = parsed.plot?.beats ?? [{ name: 'Scene' }]
+
+    const scenes: SceneData[] = []
+    const previousSummaries: string[] = []
+    const characterStates = new Map<string, CharacterStateData>()
+    const characterNames = parsed.characters.map((c) => c.name)
+
+    for (let sceneIndex = 0; sceneIndex < beats.length; sceneIndex++) {
+      const beat = beats[sceneIndex]
+
+      const currentStates = characterNames
+        .map((name) => characterStates.get(name))
+        .filter((s): s is CharacterStateData => s !== undefined)
+
+      const ctx: PromptContext = {
+        world: parsed.world,
+        characters: parsed.characters,
+        plot: parsed.plot,
+        beat,
+        previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
+        characterStates: currentStates.length > 0 ? currentStates : undefined,
+        instructions: parsed.instructions,
+      }
+
+      const systemPrompt = buildSystemPrompt(ctx)
+      const scenePrompt = buildScenePrompt(ctx)
+
+      yield { type: 'scene-start' as const, sceneIndex, beat }
+
+      let sceneText: string
+      try {
+        const result = aiStreamText({
+          model,
+          system: systemPrompt,
+          prompt: scenePrompt,
+          temperature,
+          maxTokens,
+        })
+
+        for await (const chunk of result.textStream) {
+          yield { type: 'text-delta' as const, text: chunk, sceneIndex }
+        }
+
+        sceneText = await result.text
+      } catch (error) {
+        throw new GenerationError(
+          `Failed to generate scene for beat "${beat.name}": ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+
+      let summary: string | undefined
+      let sceneCharacterStates: CharacterStateData[] | undefined
+      try {
+        const analysisResult = await generateText({
+          model,
+          prompt: buildSceneAnalysisPrompt(sceneText, characterNames),
+          temperature: 0.3,
+          maxTokens: 1024,
+        })
+
+        const analysisData = SceneAnalysisSchema.safeParse(
+          JSON.parse(analysisResult.text)
+        )
+        if (analysisData.success) {
+          summary = analysisData.data.summary
+          sceneCharacterStates = analysisData.data.characterStates
+          for (const state of analysisData.data.characterStates) {
+            characterStates.set(state.characterName, state)
+          }
+        }
+      } catch {
+        try {
+          const summaryResult = await generateText({
+            model,
+            prompt: buildSummaryPrompt(sceneText),
+            temperature: 0.3,
+            maxTokens: 256,
+          })
+          summary = summaryResult.text
+        } catch {
+          summary = undefined
+        }
+      }
+
+      if (summary) {
+        previousSummaries.push(summary)
+      }
+
+      const sceneData: SceneData = {
+        id: globalThis.crypto.randomUUID(),
+        beat,
+        text: sceneText,
+        summary,
+        characterStates: sceneCharacterStates,
+        participants: parsed.characters.map((c) => c.name),
+      }
+
+      scenes.push(sceneData)
+      const scene = new Scene(sceneData)
+
+      yield { type: 'scene-complete' as const, scene, sceneIndex }
     }
 
     return new Story({

@@ -9,10 +9,9 @@
     "clean": "pnpm -r exec rm -rf dist"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "tsx": "^4.21.0",
     "typescript": "^5.8.0",
-    "vitest": "^3.0.0"
+    "vitest": "^3.0.0",
+    "@types/node": "^22.0.0"
   },
   "engines": {
     "node": ">=20",
