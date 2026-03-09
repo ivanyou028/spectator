@@ -1,0 +1,9 @@
+{
+  "name": "@spectator/examples",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "spectator": "workspace:*",
+    "@spectator/presets": "workspace:*"
+  }
+}
