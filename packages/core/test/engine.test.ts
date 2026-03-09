@@ -12,17 +12,38 @@ const sceneAnalysisResponse = JSON.stringify({
   ],
 })
 
+const fullSceneText =
+  'The sun set over the ancient castle, casting long shadows across the courtyard.'
+
+function createMockStreamResult(text: string, chunkSize = 10) {
+  const chunks: string[] = []
+  for (let i = 0; i < text.length; i += chunkSize) {
+    chunks.push(text.slice(i, i + chunkSize))
+  }
+  return {
+    textStream: {
+      async *[Symbol.asyncIterator]() {
+        for (const chunk of chunks) {
+          yield chunk
+        }
+      },
+    },
+    text: Promise.resolve(text),
+  }
+}
+
 let callCount = 0
 vi.mock('ai', () => ({
   generateText: vi.fn().mockImplementation(() => {
     callCount++
     // Odd calls = scene text, even calls = scene analysis
     if (callCount % 2 === 1) {
-      return Promise.resolve({
-        text: 'The sun set over the ancient castle, casting long shadows across the courtyard.',
-      })
+      return Promise.resolve({ text: fullSceneText })
     }
     return Promise.resolve({ text: sceneAnalysisResponse })
+  }),
+  streamText: vi.fn().mockImplementation(() => {
+    return createMockStreamResult(fullSceneText)
   }),
 }))
 
@@ -30,8 +51,9 @@ vi.mock('../src/provider.js', () => ({
   resolveModel: vi.fn().mockResolvedValue({} as any),
 }))
 
-import { generateText } from 'ai'
-import { Engine, Character, Plot, World, Story, Scene } from '../src/index.js'
+import { generateText, streamText as aiStreamText } from 'ai'
+import { Engine, Character, Plot, World, Story, Scene, StoryStream } from '../src/index.js'
+import type { StreamEvent } from '../src/index.js'
 
 describe('Engine', () => {
   beforeEach(() => {
@@ -225,6 +247,167 @@ describe('Engine', () => {
       const secondSceneCall = calls[2]
       expect(secondSceneCall[0].prompt).toContain('Current Character States')
       expect(secondSceneCall[0].prompt).toContain('contemplative, restless')
+    })
+  })
+
+  describe('streamText()', () => {
+    beforeEach(() => {
+      vi.clearAllMocks()
+      callCount = 0
+      // For streaming tests, generateText is only called for analysis
+      vi.mocked(generateText).mockImplementation(() => {
+        return Promise.resolve({ text: sceneAnalysisResponse }) as any
+      })
+    })
+
+    it('yields scene-start, text-delta, and scene-complete events', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const events: StreamEvent[] = []
+
+      const storyStream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+      })
+
+      for await (const event of storyStream) {
+        events.push(event)
+      }
+
+      expect(events[0]).toEqual(
+        expect.objectContaining({
+          type: 'scene-start',
+          sceneIndex: 0,
+        })
+      )
+
+      const deltas = events.filter((e) => e.type === 'text-delta')
+      expect(deltas.length).toBeGreaterThan(0)
+
+      const reconstructed = deltas
+        .map((e) => (e as Extract<StreamEvent, { type: 'text-delta' }>).text)
+        .join('')
+      expect(reconstructed).toBe(fullSceneText)
+
+      const lastEvent = events[events.length - 1]
+      expect(lastEvent.type).toBe('scene-complete')
+      expect(
+        (lastEvent as Extract<StreamEvent, { type: 'scene-complete' }>).scene
+      ).toBeInstanceOf(Scene)
+    })
+
+    it('provides story via .story after full consumption', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const storyStream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+      })
+
+      for await (const _event of storyStream) {
+        // consume
+      }
+
+      const story = storyStream.story
+      expect(story).toBeInstanceOf(Story)
+      expect(story.sceneCount).toBe(1)
+    })
+
+    it('provides story via .toStory() convenience', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const story = await engine
+        .streamText({
+          characters: [{ name: 'Kira' }],
+        })
+        .toStory()
+
+      expect(story).toBeInstanceOf(Story)
+      expect(story.sceneCount).toBe(1)
+    })
+
+    it('throws when accessing .story before stream is consumed', () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const storyStream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+      })
+
+      expect(() => storyStream.story).toThrow('not yet available')
+    })
+
+    it('yields events for multiple scenes in correct order', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const events: StreamEvent[] = []
+
+      const storyStream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+        plot: {
+          beats: [{ name: 'Act 1' }, { name: 'Act 2' }],
+        },
+      })
+
+      for await (const event of storyStream) {
+        events.push(event)
+      }
+
+      const starts = events.filter((e) => e.type === 'scene-start')
+      const completes = events.filter((e) => e.type === 'scene-complete')
+
+      expect(starts).toHaveLength(2)
+      expect(completes).toHaveLength(2)
+      expect(
+        (starts[0] as Extract<StreamEvent, { type: 'scene-start' }>).sceneIndex
+      ).toBe(0)
+      expect(
+        (starts[1] as Extract<StreamEvent, { type: 'scene-start' }>).sceneIndex
+      ).toBe(1)
+    })
+
+    it('passes character states between scenes', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+
+      await engine
+        .streamText({
+          characters: [{ name: 'Kira' }],
+          plot: {
+            beats: [{ name: 'Act 1' }, { name: 'Act 2' }],
+          },
+        })
+        .toStory()
+
+      // streamText (AI SDK) is called once per scene for text generation
+      const streamCalls = vi.mocked(aiStreamText).mock.calls
+      expect(streamCalls).toHaveLength(2)
+
+      // Second scene's prompt should contain character state info
+      const secondCall = streamCalls[1]
+      expect((secondCall[0] as any).prompt).toContain('Current Character States')
+      expect((secondCall[0] as any).prompt).toContain('contemplative, restless')
+    })
+
+    it('handles analysis failure gracefully', async () => {
+      vi.mocked(generateText).mockRejectedValue(new Error('Analysis failed'))
+
+      const engine = new Engine({ provider: 'anthropic' })
+      const events: StreamEvent[] = []
+
+      const storyStream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+      })
+
+      for await (const event of storyStream) {
+        events.push(event)
+      }
+
+      const complete = events.find(
+        (e) => e.type === 'scene-complete'
+      ) as Extract<StreamEvent, { type: 'scene-complete' }>
+      expect(complete).toBeDefined()
+      expect(complete.scene.text).toBeTruthy()
+      expect(complete.scene.summary).toBeUndefined()
+    })
+
+    it('returns a StoryStream instance', () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const stream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+      })
+      expect(stream).toBeInstanceOf(StoryStream)
     })
   })
 })
