@@ -1,8 +1,28 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+const sceneAnalysisResponse = JSON.stringify({
+  summary: 'Kira watched the sun set over the castle.',
+  characterStates: [
+    {
+      characterName: 'Kira',
+      emotionalState: 'contemplative, restless',
+      currentGoals: ['Explore the castle'],
+      relationships: [],
+    },
+  ],
+})
+
+let callCount = 0
 vi.mock('ai', () => ({
-  generateText: vi.fn().mockResolvedValue({
-    text: 'The sun set over the ancient castle, casting long shadows across the courtyard.',
+  generateText: vi.fn().mockImplementation(() => {
+    callCount++
+    // Odd calls = scene text, even calls = scene analysis
+    if (callCount % 2 === 1) {
+      return Promise.resolve({
+        text: 'The sun set over the ancient castle, casting long shadows across the courtyard.',
+      })
+    }
+    return Promise.resolve({ text: sceneAnalysisResponse })
   }),
 }))
 
@@ -16,6 +36,7 @@ import { Engine, Character, Plot, World, Story, Scene } from '../src/index.js'
 describe('Engine', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    callCount = 0
   })
 
   describe('generate()', () => {
@@ -163,6 +184,47 @@ describe('Engine', () => {
           prompt: expect.stringContaining('Set in modern-day Seoul'),
         })
       )
+    })
+  })
+
+  describe('character state tracking', () => {
+    it('extracts character states from scene analysis', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const story = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      const scene = story.scenes[0]
+      expect(scene.characterStates).toBeDefined()
+      expect(scene.characterStates![0].characterName).toBe('Kira')
+      expect(scene.characterStates![0].emotionalState).toBe('contemplative, restless')
+    })
+
+    it('stores character states on the story', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const story = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      expect(story.characterStates).toBeDefined()
+      expect(story.characterStates![0].characterName).toBe('Kira')
+    })
+
+    it('passes character states to subsequent scene prompts', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      await engine.generate({
+        characters: [{ name: 'Kira' }],
+        plot: {
+          beats: [{ name: 'Act 1' }, { name: 'Act 2' }],
+        },
+      })
+
+      // The 3rd generateText call is the 2nd scene generation (call 1=scene, 2=analysis, 3=scene, 4=analysis)
+      // The prompt for scene 2 should include character state from scene 1
+      const calls = vi.mocked(generateText).mock.calls
+      const secondSceneCall = calls[2]
+      expect(secondSceneCall[0].prompt).toContain('Current Character States')
+      expect(secondSceneCall[0].prompt).toContain('contemplative, restless')
     })
   })
 })

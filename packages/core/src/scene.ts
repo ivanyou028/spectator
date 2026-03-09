@@ -1,7 +1,7 @@
 import { ZodError } from 'zod'
 import { ValidationError } from './errors.js'
 import { SceneSchema } from './types.js'
-import type { BeatData, SceneData, SceneInput } from './types.js'
+import type { BeatData, CharacterStateData, SceneData, SceneInput } from './types.js'
 
 export class Scene {
   readonly data: Readonly<SceneData>
@@ -37,6 +37,10 @@ export class Scene {
 
   get summary(): string | undefined {
     return this.data.summary
+  }
+
+  get characterStates(): CharacterStateData[] | undefined {
+    return this.data.characterStates
   }
 
   toJSON(): SceneData {

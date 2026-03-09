@@ -3,6 +3,7 @@ import {
   buildSystemPrompt,
   buildScenePrompt,
   buildSummaryPrompt,
+  buildSceneAnalysisPrompt,
 } from '../src/prompt.js'
 import type { PromptContext } from '../src/prompt.js'
 
@@ -195,6 +196,66 @@ describe('prompt', () => {
 
       expect(prompt).toContain('Summarize')
       expect(prompt).toContain(sceneText)
+    })
+  })
+
+  describe('character state injection in buildScenePrompt()', () => {
+    it('includes character states when provided', () => {
+      const prompt = buildScenePrompt({
+        characters: [{ name: 'Kira' }],
+        characterStates: [
+          {
+            characterName: 'Kira',
+            emotionalState: 'grieving, angry',
+            currentGoals: ['Avenge Marcus'],
+            relationships: [
+              { target: 'Vorn', sentiment: 'hatred', description: 'killed her mentor' },
+            ],
+            internalConflict: 'torn between revenge and escape',
+          },
+        ],
+      })
+
+      expect(prompt).toContain('## Current Character States')
+      expect(prompt).toContain('**Kira**')
+      expect(prompt).toContain('Emotional state: grieving, angry')
+      expect(prompt).toContain('Current goals: Avenge Marcus')
+      expect(prompt).toContain('hatred toward Vorn')
+      expect(prompt).toContain('killed her mentor')
+      expect(prompt).toContain('Internal conflict: torn between revenge and escape')
+    })
+
+    it('omits character states section when not provided', () => {
+      const prompt = buildScenePrompt({
+        characters: [{ name: 'Kira' }],
+      })
+
+      expect(prompt).not.toContain('Current Character States')
+    })
+
+    it('omits character states section when array is empty', () => {
+      const prompt = buildScenePrompt({
+        characters: [{ name: 'Kira' }],
+        characterStates: [],
+      })
+
+      expect(prompt).not.toContain('Current Character States')
+    })
+  })
+
+  describe('buildSceneAnalysisPrompt()', () => {
+    it('includes scene text and character names', () => {
+      const prompt = buildSceneAnalysisPrompt(
+        'Kira fled into the night.',
+        ['Kira', 'Vorn']
+      )
+
+      expect(prompt).toContain('Kira fled into the night.')
+      expect(prompt).toContain('Kira, Vorn')
+      expect(prompt).toContain('emotionalState')
+      expect(prompt).toContain('currentGoals')
+      expect(prompt).toContain('relationships')
+      expect(prompt).toContain('JSON')
     })
   })
 })
