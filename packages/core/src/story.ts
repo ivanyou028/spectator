@@ -4,6 +4,7 @@ import { Scene } from './scene.js'
 import { StorySchema } from './types.js'
 import type {
   CharacterData,
+  CharacterStateData,
   PlotData,
   StoryData,
   StoryInput,
@@ -54,6 +55,11 @@ export class Story {
 
   get sceneCount(): number {
     return this.data.scenes.length
+  }
+
+  get characterStates(): CharacterStateData[] | undefined {
+    const lastScene = this.data.scenes[this.data.scenes.length - 1]
+    return lastScene?.characterStates
   }
 
   toJSON(): StoryData {

@@ -1,6 +1,6 @@
 import { generateText, type LanguageModel } from 'ai'
 import { GenerationError } from './errors.js'
-import { buildScenePrompt, buildSummaryPrompt, buildSystemPrompt } from './prompt.js'
+import { buildSceneAnalysisPrompt, buildScenePrompt, buildSummaryPrompt, buildSystemPrompt } from './prompt.js'
 import type { PromptContext } from './prompt.js'
 import { resolveModel, type ProviderConfig } from './provider.js'
 import { Scene } from './scene.js'
@@ -8,10 +8,11 @@ import { Story } from './story.js'
 import { Character } from './character.js'
 import { Plot } from './plot.js'
 import { World } from './world.js'
-import { GenerateInputSchema } from './types.js'
+import { GenerateInputSchema, SceneAnalysisSchema } from './types.js'
 import type {
   BeatData,
   CharacterData,
+  CharacterStateData,
   GenerateInput,
   PlotData,
   SceneData,
@@ -109,14 +110,21 @@ export class Engine {
 
     const scenes: SceneData[] = []
     const previousSummaries: string[] = []
+    const characterStates = new Map<string, CharacterStateData>()
+    const characterNames = parsed.characters.map((c) => c.name)
 
     for (const beat of beats) {
+      const currentStates = characterNames
+        .map((name) => characterStates.get(name))
+        .filter((s): s is CharacterStateData => s !== undefined)
+
       const ctx: PromptContext = {
         world: parsed.world,
         characters: parsed.characters,
         plot: parsed.plot,
         beat,
         previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
+        characterStates: currentStates.length > 0 ? currentStates : undefined,
         instructions: parsed.instructions,
       }
 
@@ -139,17 +147,40 @@ export class Engine {
         )
       }
 
+      // Extract summary + character states in one call
       let summary: string | undefined
+      let sceneCharacterStates: CharacterStateData[] | undefined
       try {
-        const summaryResult = await generateText({
+        const analysisResult = await generateText({
           model,
-          prompt: buildSummaryPrompt(sceneText),
+          prompt: buildSceneAnalysisPrompt(sceneText, characterNames),
           temperature: 0.3,
-          maxTokens: 256,
+          maxTokens: 1024,
         })
-        summary = summaryResult.text
+
+        const parsed = SceneAnalysisSchema.safeParse(
+          JSON.parse(analysisResult.text)
+        )
+        if (parsed.success) {
+          summary = parsed.data.summary
+          sceneCharacterStates = parsed.data.characterStates
+          for (const state of parsed.data.characterStates) {
+            characterStates.set(state.characterName, state)
+          }
+        }
       } catch {
-        summary = undefined
+        // Fallback: try simple summary if analysis fails
+        try {
+          const summaryResult = await generateText({
+            model,
+            prompt: buildSummaryPrompt(sceneText),
+            temperature: 0.3,
+            maxTokens: 256,
+          })
+          summary = summaryResult.text
+        } catch {
+          summary = undefined
+        }
       }
 
       if (summary) {
@@ -161,6 +192,7 @@ export class Engine {
         beat,
         text: sceneText,
         summary,
+        characterStates: sceneCharacterStates,
         participants: parsed.characters.map((c) => c.name),
       }
 

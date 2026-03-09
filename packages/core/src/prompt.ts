@@ -1,4 +1,4 @@
-import type { BeatData, CharacterData, WorldData, PlotData } from './types.js'
+import type { BeatData, CharacterData, CharacterStateData, WorldData, PlotData } from './types.js'
 
 export interface PromptContext {
   world?: WorldData
@@ -6,6 +6,7 @@ export interface PromptContext {
   plot?: PlotData
   beat?: BeatData
   previousScenes?: string[]
+  characterStates?: CharacterStateData[]
   instructions?: string
 }
 
@@ -74,6 +75,31 @@ export function buildScenePrompt(ctx: PromptContext): string {
     lines.push('')
   }
 
+  if (ctx.characterStates && ctx.characterStates.length > 0) {
+    lines.push('## Current Character States')
+    lines.push('(These reflect how each character feels RIGHT NOW based on previous events. Write them accordingly.)')
+    lines.push('')
+    for (const state of ctx.characterStates) {
+      const parts: string[] = [`**${state.characterName}**`]
+      parts.push(`Emotional state: ${state.emotionalState}`)
+      if (state.currentGoals.length > 0)
+        parts.push(`Current goals: ${state.currentGoals.join(', ')}`)
+      if (state.relationships && state.relationships.length > 0) {
+        const rels = state.relationships.map((r) => {
+          let desc = `${r.sentiment} toward ${r.target}`
+          if (r.description) desc += ` (${r.description})`
+          return desc
+        })
+        parts.push(`Relationships: ${rels.join('; ')}`)
+      }
+      if (state.internalConflict)
+        parts.push(`Internal conflict: ${state.internalConflict}`)
+      if (state.notes) parts.push(`Notes: ${state.notes}`)
+      lines.push(parts.join('\n'))
+      lines.push('')
+    }
+  }
+
   if (ctx.beat) {
     lines.push('## Scene Beat')
     lines.push(`**${ctx.beat.name}**`)
@@ -103,4 +129,35 @@ export function buildScenePrompt(ctx: PromptContext): string {
 
 export function buildSummaryPrompt(sceneText: string): string {
   return `Summarize the following scene in 1-2 sentences, capturing the key events and emotional beats:\n\n${sceneText}`
+}
+
+export function buildSceneAnalysisPrompt(sceneText: string, characterNames: string[]): string {
+  return `Analyze the following scene and produce a JSON object with exactly this structure:
+
+{
+  "summary": "1-2 sentence plot summary of the scene",
+  "characterStates": [
+    {
+      "characterName": "Name",
+      "emotionalState": "dominant emotions at the END of this scene",
+      "currentGoals": ["what they want NOW"],
+      "relationships": [{"target": "OtherName", "sentiment": "how they feel", "description": "optional context"}],
+      "internalConflict": "any unresolved inner tension, or null",
+      "notes": "any other relevant state changes, or null"
+    }
+  ]
+}
+
+Characters to analyze: ${characterNames.join(', ')}
+
+For each character:
+- emotionalState: Their dominant emotions at the END of this scene (e.g. "grieving and determined", "suspicious but hopeful")
+- currentGoals: What they want NOW — these may have shifted from their original goals based on events
+- relationships: How they currently feel about each other character they interacted with
+- internalConflict: Any unresolved tension within the character (e.g. "torn between loyalty and self-preservation")
+
+Respond with ONLY the JSON object, no other text.
+
+Scene:
+${sceneText}`
 }

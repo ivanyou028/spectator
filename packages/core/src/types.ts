@@ -49,6 +49,26 @@ export const PlotSchema = z.object({
   metadata: z.record(z.unknown()).optional(),
 })
 
+export const DynamicRelationshipSchema = z.object({
+  target: z.string(),
+  sentiment: z.string(),
+  description: z.string().optional(),
+})
+
+export const CharacterStateSchema = z.object({
+  characterName: z.string(),
+  emotionalState: z.string(),
+  currentGoals: z.array(z.string()),
+  relationships: z.array(DynamicRelationshipSchema).optional(),
+  internalConflict: z.string().optional(),
+  notes: z.string().optional(),
+})
+
+export const SceneAnalysisSchema = z.object({
+  summary: z.string(),
+  characterStates: z.array(CharacterStateSchema),
+})
+
 export const SceneSchema = z.object({
   id: z.string(),
   beat: BeatSchema.optional(),
@@ -56,6 +76,7 @@ export const SceneSchema = z.object({
   participants: z.array(z.string()).optional(),
   text: z.string(),
   summary: z.string().optional(),
+  characterStates: z.array(CharacterStateSchema).optional(),
   metadata: z.record(z.unknown()).optional(),
 })
 
@@ -99,6 +120,12 @@ export type BeatData = z.output<typeof BeatSchema>
 
 export type PlotInput = z.input<typeof PlotSchema>
 export type PlotData = z.output<typeof PlotSchema>
+
+export type CharacterStateInput = z.input<typeof CharacterStateSchema>
+export type CharacterStateData = z.output<typeof CharacterStateSchema>
+
+export type SceneAnalysisInput = z.input<typeof SceneAnalysisSchema>
+export type SceneAnalysisData = z.output<typeof SceneAnalysisSchema>
 
 export type SceneInput = z.input<typeof SceneSchema>
 export type SceneData = z.output<typeof SceneSchema>
