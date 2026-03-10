@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@spectator-ai/core"><img src="https://img.shields.io/npm/v/@spectator-ai/core?label=%40spectator%2Fcore" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@spectator-ai/core"><img src="https://img.shields.io/npm/v/@spectator-ai/core?label=%40spectator-ai%2Fcore" alt="npm version"></a>
   <a href="https://github.com/ivanyou028/spectator/actions/workflows/ci.yml"><img src="https://github.com/ivanyou028/spectator/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/ivanyou028/spectator/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ivanyou028/spectator" alt="MIT License"></a>
 </p>
@@ -20,7 +20,17 @@ Most AI story generators produce a single blob of text. Spectator treats narrati
 ## Quick Start
 
 ```bash
+# npm
 npm install @spectator-ai/core @spectator-ai/presets @ai-sdk/anthropic
+
+# pnpm
+pnpm add @spectator-ai/core @spectator-ai/presets @ai-sdk/anthropic
+
+# yarn
+yarn add @spectator-ai/core @spectator-ai/presets @ai-sdk/anthropic
+
+# bun
+bun add @spectator-ai/core @spectator-ai/presets @ai-sdk/anthropic
 ```
 
 ```bash

@@ -9,14 +9,17 @@ npm install @spectator-ai/core
 Or with your preferred package manager:
 
 ::: code-group
+```bash [npm]
+npm install @spectator-ai/core
+```
 ```bash [pnpm]
 pnpm add @spectator-ai/core
 ```
 ```bash [yarn]
 yarn add @spectator-ai/core
 ```
-```bash [npm]
-npm install @spectator-ai/core
+```bash [bun]
+bun add @spectator-ai/core
 ```
 :::
 
@@ -29,13 +32,24 @@ Spectator uses the [Vercel AI SDK](https://sdk.vercel.ai/) and requires at least
 | Anthropic (Claude) | `@ai-sdk/anthropic` | `claude-sonnet-4-20250514` |
 | OpenAI | `@ai-sdk/openai` | `gpt-4o` |
 
-```bash
-# For Anthropic Claude (recommended)
-npm install @ai-sdk/anthropic
-
-# For OpenAI
-npm install @ai-sdk/openai
+::: code-group
+```bash [npm]
+npm install @ai-sdk/anthropic    # Anthropic Claude (recommended)
+npm install @ai-sdk/openai       # OpenAI
 ```
+```bash [pnpm]
+pnpm add @ai-sdk/anthropic
+pnpm add @ai-sdk/openai
+```
+```bash [yarn]
+yarn add @ai-sdk/anthropic
+yarn add @ai-sdk/openai
+```
+```bash [bun]
+bun add @ai-sdk/anthropic
+bun add @ai-sdk/openai
+```
+:::
 
 ## Set Your API Key
 
@@ -57,14 +71,26 @@ You can also pass `apiKey` directly to the Engine constructor, but environment v
 
 The `@spectator-ai/presets` package provides ready-made worlds, plot templates, and character archetypes:
 
-```bash
+::: code-group
+```bash [npm]
 npm install @spectator-ai/presets
 ```
+```bash [pnpm]
+pnpm add @spectator-ai/presets
+```
+```bash [yarn]
+yarn add @spectator-ai/presets
+```
+```bash [bun]
+bun add @spectator-ai/presets
+```
+:::
 
 ## Requirements
 
-- **Node.js** >= 20
+- **Node.js** >= 20 (or **Bun** >= 1.0)
 - **An API key** for your chosen AI provider
+- **Package manager**: npm, pnpm, yarn, or bun
 
 ## Next Steps
 
