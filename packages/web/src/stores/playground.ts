@@ -43,6 +43,7 @@ export interface PlaygroundState {
   story: StoryData | null
   continuationBeats: BeatInput[]
   continuationInstructions: string
+  viewMode: 'form' | 'graph'
 }
 
 export type PlaygroundAction =
@@ -65,6 +66,7 @@ export type PlaygroundAction =
   | { type: 'RESET_OUTPUT' }
   | { type: 'SET_CONTINUATION_BEATS'; payload: BeatInput[] }
   | { type: 'SET_CONTINUATION_INSTRUCTIONS'; payload: string }
+  | { type: 'SET_VIEW_MODE'; payload: 'form' | 'graph' }
 
 export const initialState: PlaygroundState = {
   engineConfig: {
@@ -86,6 +88,7 @@ export const initialState: PlaygroundState = {
   story: null,
   continuationBeats: [],
   continuationInstructions: '',
+  viewMode: 'form',
 }
 
 export function playgroundReducer(
@@ -127,6 +130,9 @@ export function playgroundReducer(
 
     case 'SET_INSTRUCTIONS':
       return { ...state, instructions: action.payload }
+
+    case 'SET_VIEW_MODE':
+      return { ...state, viewMode: action.payload }
 
     case 'APPLY_PRESET': {
       const next = { ...state }

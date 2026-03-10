@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { usePlayground } from '../../stores/playground.js'
 import { useLocalStorage } from '../../hooks/useLocalStorage.js'
 
@@ -12,9 +12,11 @@ export function EngineSettings() {
   )
 
   // Sync localStorage values on mount
-  if (!state.engineConfig.apiKey && savedKey) {
-    dispatch({ type: 'SET_ENGINE_CONFIG', payload: { apiKey: savedKey, provider: savedProvider } })
-  }
+  useEffect(() => {
+    if (!state.engineConfig.apiKey && savedKey) {
+      dispatch({ type: 'SET_ENGINE_CONFIG', payload: { apiKey: savedKey, provider: savedProvider } })
+    }
+  }, [state.engineConfig.apiKey, savedKey, savedProvider, dispatch])
 
   function updateConfig(payload: Partial<typeof state.engineConfig>) {
     dispatch({ type: 'SET_ENGINE_CONFIG', payload })

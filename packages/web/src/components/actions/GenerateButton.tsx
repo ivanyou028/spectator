@@ -14,7 +14,7 @@ export function GenerateButton() {
     <div className="pt-2">
       <button
         type="button"
-        onClick={generate}
+        onClick={() => generate()}
         disabled={!canGenerate}
         className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-40"
       >

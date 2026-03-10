@@ -30,7 +30,7 @@ export function useEngine() {
     return new Engine({ model: languageModel, temperature, maxTokens })
   }, [state.engineConfig])
 
-  const generate = useCallback(async () => {
+  const generate = useCallback(async (overrideConfig?: { world?: any, characters?: any[], plot?: any, instructions?: string }) => {
     if (generatingRef.current) return
     generatingRef.current = true
     dispatch({ type: 'RESET_OUTPUT' })
@@ -38,19 +38,25 @@ export function useEngine() {
 
     try {
       const engine = createEngine()
-      let chars = state.characters.filter((c) => c.name.trim() !== '')
+      
+      // Use override config if provided, otherwise fallback to global state
+      const worldToUse = overrideConfig?.world || state.world
+      const charsToUse = overrideConfig?.characters || state.characters
+      const plotToUse = overrideConfig?.plot !== undefined ? overrideConfig.plot : state.plot
+      
+      let chars = charsToUse.filter((c: any) => c.name.trim() !== '')
       if (chars.length === 0) {
         chars = [{ name: 'Protagonist' }]
       }
 
       const prompt = state.prompt.trim()
-      const advancedInstructions = state.instructions.trim()
+      const advancedInstructions = overrideConfig?.instructions ?? state.instructions.trim()
       const instructions = [prompt, advancedInstructions].filter(Boolean).join('\n\n') || undefined
 
       const stream = engine.streamText({
-        world: Object.keys(state.world).length > 0 ? state.world : undefined,
+        world: Object.keys(worldToUse).length > 0 ? worldToUse : undefined,
         characters: chars,
-        plot: state.plot ?? undefined,
+        plot: plotToUse ?? undefined,
         instructions,
       })
 
