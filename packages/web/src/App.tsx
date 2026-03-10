@@ -12,6 +12,7 @@ import {
 import { Header } from './components/layout/Header.js'
 import { Sidebar } from './components/layout/Sidebar.js'
 import { MainPanel } from './components/layout/MainPanel.js'
+import { PersistenceProvider } from './hooks/usePersistence.js'
 
 export default function App() {
   const [playState, playDispatch] = useReducer(playgroundReducer, playgroundInitialState)
@@ -39,13 +40,15 @@ export default function App() {
   return (
     <PlaygroundContext.Provider value={{ state: playState, dispatch: playDispatch }}>
       <GraphContext.Provider value={{ state: graphState, dispatch: graphDispatch }}>
-        <div className="flex h-screen flex-col bg-zinc-950 text-zinc-100">
-          <Header />
-          <div className="flex min-h-0 flex-1">
-            {playState.viewMode === 'form' && <Sidebar />}
-            <MainPanel />
+        <PersistenceProvider>
+          <div className="flex h-screen flex-col bg-zinc-950 text-zinc-100">
+            <Header />
+            <div className="flex min-h-0 flex-1">
+              {playState.viewMode === 'form' && <Sidebar />}
+              <MainPanel />
+            </div>
           </div>
-        </div>
+        </PersistenceProvider>
       </GraphContext.Provider>
     </PlaygroundContext.Provider>
   )

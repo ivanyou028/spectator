@@ -25,6 +25,7 @@ export type GraphAction =
   | { type: 'ON_CONNECT'; payload: Connection }
   | { type: 'UPDATE_NODE_DATA'; id: string; payload: any }
   | { type: 'RESET_GRAPH' }
+  | { type: 'HYDRATE_STATE'; payload: Partial<GraphState> }
 
 export const initialGraphState: GraphState = {
   nodes: [],
@@ -62,6 +63,8 @@ export function graphReducer(state: GraphState, action: GraphAction): GraphState
       }
     case 'RESET_GRAPH':
       return initialGraphState
+    case 'HYDRATE_STATE':
+      return { ...state, ...action.payload }
     default:
       return state
   }

@@ -71,6 +71,7 @@ export type PlaygroundAction =
   | { type: 'SET_VIEW_MODE'; payload: 'form' | 'graph' }
   | { type: 'DRAFT_COMPLETE'; text: string }
   | { type: 'CRITIQUE_COMPLETE'; text: string }
+  | { type: 'HYDRATE_STATE'; payload: Partial<PlaygroundState> }
 
 export const initialState: PlaygroundState = {
   engineConfig: {
@@ -207,6 +208,16 @@ export function playgroundReducer(
 
     case 'SET_CONTINUATION_INSTRUCTIONS':
       return { ...state, continuationInstructions: action.payload }
+
+    case 'HYDRATE_STATE':
+      return { 
+        ...state, 
+        ...action.payload,
+        // Ensure we don't load into a streaming state if we closed the tab mid-generation
+        status: action.payload.status === 'streaming' ? 'error' : (action.payload.status ?? state.status),
+        error: action.payload.status === 'streaming' ? 'Generation interrupted by page reload.' : (action.payload.error ?? state.error),
+        streamingScene: null
+      }
 
     default:
       return state
