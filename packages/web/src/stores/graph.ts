@@ -18,6 +18,8 @@ export interface GraphState {
 export type GraphAction =
   | { type: 'SET_NODES'; payload: Node[] }
   | { type: 'SET_EDGES'; payload: Edge[] }
+  | { type: 'ADD_NODE'; payload: Node }
+  | { type: 'ADD_EDGE'; payload: Edge }
   | { type: 'ON_NODES_CHANGE'; payload: NodeChange[] }
   | { type: 'ON_EDGES_CHANGE'; payload: EdgeChange[] }
   | { type: 'ON_CONNECT'; payload: Connection }
@@ -35,6 +37,10 @@ export function graphReducer(state: GraphState, action: GraphAction): GraphState
       return { ...state, nodes: action.payload }
     case 'SET_EDGES':
       return { ...state, edges: action.payload }
+    case 'ADD_NODE':
+      return { ...state, nodes: [...state.nodes, action.payload] }
+    case 'ADD_EDGE':
+      return { ...state, edges: [...state.edges, action.payload] }
     case 'ON_NODES_CHANGE':
       return { ...state, nodes: applyNodeChanges(action.payload, state.nodes) }
     case 'ON_EDGES_CHANGE':

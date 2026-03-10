@@ -6,7 +6,7 @@ import { useCoPilot } from '../../hooks/useCoPilot.js'
 export function CoPilotChat() {
   const [isOpen, setIsOpen] = useState(false)
   const [isMinimized, setIsMinimized] = useState(false)
-  const { messages, input, handleInputChange, handleSubmit, isLoading } = useCoPilot()
+  const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useCoPilot()
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -107,6 +107,11 @@ export function CoPilotChat() {
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: '150ms' }} />
                     <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-zinc-400" style={{ animationDelay: '300ms' }} />
                   </div>
+                </div>
+              )}
+              {error && (
+                <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm text-red-300">
+                  {error.message || 'Something went wrong. Check your API key in Engine Settings.'}
                 </div>
               )}
               <div ref={messagesEndRef} />

@@ -7,8 +7,8 @@ import { usePlayground } from '../stores/playground.js'
 import type { Node, Edge } from '@xyflow/react'
 
 export function useCoPilot() {
-  const { state: playState, dispatch: playDispatch } = usePlayground()
-  const { state: graphState, dispatch: graphDispatch } = useGraph()
+  const { state: playState } = usePlayground()
+  const { dispatch: graphDispatch } = useGraph()
 
   const [messages, setMessages] = useState<CoreMessage[]>([])
   const [input, setInput] = useState('')
@@ -25,7 +25,7 @@ export function useCoPilot() {
   })
 
   // We explicitly use sonnet for high tool-calling reliability
-  const model = anthropic('claude-3-5-sonnet-20241022')
+  const model = anthropic('claude-sonnet-4-20250514')
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setInput(e.target.value)
@@ -82,7 +82,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
                 position: { x: 50, y: 50 },
                 data: { genre, setting, tone },
               }
-              graphDispatch({ type: 'SET_NODES', payload: [...graphState.nodes, newNode] })
+              graphDispatch({ type: 'ADD_NODE', payload: newNode })
               return { id, message: 'Added World node to canvas.' }
             },
           },
@@ -101,7 +101,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
                 position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
                 data: { name, traits, goals },
               }
-              graphDispatch({ type: 'SET_NODES', payload: [...graphState.nodes, newNode] })
+              graphDispatch({ type: 'ADD_NODE', payload: newNode })
               return { id, message: `Added Character "${name}" to canvas.` }
             },
           },
@@ -123,7 +123,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
                 position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 300 },
                 data: { name, type, description },
               }
-              graphDispatch({ type: 'SET_NODES', payload: [...graphState.nodes, newNode] })
+              graphDispatch({ type: 'ADD_NODE', payload: newNode })
               return { id, message: `Added Plot Beat "${name}" to canvas.` }
             },
           },
@@ -141,7 +141,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
                 target: targetId,
                 label,
               }
-              graphDispatch({ type: 'SET_EDGES', payload: [...graphState.edges, edge] })
+              graphDispatch({ type: 'ADD_EDGE', payload: edge })
               return { success: true, message: `Connected ${sourceId} to ${targetId}` }
             },
           },
@@ -173,16 +173,23 @@ If the user asks you to connect things, use the connect_nodes tool.`,
         else if (delta.type === 'tool-result') {
           // Finish the current assistant message
           currentMessages = [...currentMessages, { role: 'assistant' as const, content: [...assistantContent] }]
-          
+
           // Append the tool message
-          currentMessages = [...currentMessages, { 
-            role: 'tool' as const, 
-            content: [{ type: 'tool-result', toolCallId: delta.toolCallId, toolName: delta.toolName, result: delta.result }] 
+          currentMessages = [...currentMessages, {
+            role: 'tool' as const,
+            content: [{ type: 'tool-result', toolCallId: delta.toolCallId, toolName: delta.toolName, result: delta.result }]
           }]
-          
+
           // Reset assistant content for the next text step
           assistantContent = []
           updateMessages()
+        }
+        else if (delta.type === 'error') {
+          const errMsg = delta.error instanceof Error ? delta.error : new Error(String(delta.error))
+          setError(errMsg)
+          setIsLoading(false)
+          abortControllerRef.current = null
+          return
         }
       }
 
@@ -201,7 +208,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
         setIsLoading(false)
       }
     }
-  }, [messages, isLoading, model, graphState, graphDispatch, playDispatch])
+  }, [messages, isLoading, model, graphDispatch])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
