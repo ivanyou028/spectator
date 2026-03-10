@@ -4,6 +4,8 @@ import type { Story } from './story.js'
 
 export type StreamEvent =
   | { type: 'scene-start'; sceneIndex: number; beat?: BeatData }
+  | { type: 'draft-complete'; text: string; sceneIndex: number }
+  | { type: 'critique-complete'; text: string; sceneIndex: number }
   | { type: 'text-delta'; text: string; sceneIndex: number }
   | { type: 'scene-complete'; scene: Scene; sceneIndex: number }
 

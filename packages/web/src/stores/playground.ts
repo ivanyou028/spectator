@@ -44,6 +44,8 @@ export interface PlaygroundState {
   continuationBeats: BeatInput[]
   continuationInstructions: string
   viewMode: 'form' | 'graph'
+  draftText: string | null
+  critiqueText: string | null
 }
 
 export type PlaygroundAction =
@@ -67,6 +69,8 @@ export type PlaygroundAction =
   | { type: 'SET_CONTINUATION_BEATS'; payload: BeatInput[] }
   | { type: 'SET_CONTINUATION_INSTRUCTIONS'; payload: string }
   | { type: 'SET_VIEW_MODE'; payload: 'form' | 'graph' }
+  | { type: 'DRAFT_COMPLETE'; text: string }
+  | { type: 'CRITIQUE_COMPLETE'; text: string }
 
 export const initialState: PlaygroundState = {
   engineConfig: {
@@ -89,6 +93,8 @@ export const initialState: PlaygroundState = {
   continuationBeats: [],
   continuationInstructions: '',
   viewMode: 'form',
+  draftText: null,
+  critiqueText: null,
 }
 
 export function playgroundReducer(
@@ -143,13 +149,21 @@ export function playgroundReducer(
     }
 
     case 'GENERATION_START':
-      return { ...state, status: 'streaming', error: null, streamingScene: null }
+      return { ...state, status: 'streaming', error: null, streamingScene: null, draftText: null, critiqueText: null }
 
     case 'SCENE_START':
       return {
         ...state,
         streamingScene: { sceneIndex: action.sceneIndex, beat: action.beat, text: '' },
+        draftText: null,
+        critiqueText: null,
       }
+
+    case 'DRAFT_COMPLETE':
+      return { ...state, draftText: action.text }
+
+    case 'CRITIQUE_COMPLETE':
+      return { ...state, critiqueText: action.text }
 
     case 'TEXT_DELTA':
       if (!state.streamingScene) return state
@@ -184,6 +198,8 @@ export function playgroundReducer(
         status: 'idle',
         continuationBeats: [],
         continuationInstructions: '',
+        draftText: null,
+        critiqueText: null,
       }
 
     case 'SET_CONTINUATION_BEATS':

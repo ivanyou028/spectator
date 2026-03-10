@@ -161,3 +161,36 @@ Respond with ONLY the JSON object, no other text.
 Scene:
 ${sceneText}`
 }
+
+export function buildCritiquePrompt(ctx: PromptContext, draftText: string): string {
+  const lines: string[] = []
+  
+  lines.push('You are an expert editor reviewing a draft of a scene for consistency, pacing, and character adherence.')
+  lines.push(`## Review Criteria`)
+  lines.push('1. Does the tone match the world setting?')
+  if (ctx.beat) lines.push(`2. Does the scene fulfill the narrative beat: ${ctx.beat.name}?`)
+  lines.push('3. Are the characters acting consistently with their traits and relationships?')
+  lines.push('4. Is it "showing" rather than "telling"?')
+  
+  lines.push('\n## The Draft')
+  lines.push(draftText)
+  
+  lines.push('\nProvide a concise, 2-to-3 sentence critique of this draft focusing strictly on areas for improvement to elevate the narrative quality.')
+  
+  return lines.join('\n')
+}
+
+export function buildRevisionPrompt(ctx: PromptContext, draftText: string, critiqueText: string): string {
+  const lines: string[] = []
+  
+  lines.push('You are an expert author rewriting a scene based on editorial critique.')
+  lines.push('\n## Original Draft')
+  lines.push(draftText)
+  
+  lines.push('\n## Editorial Critique')
+  lines.push(critiqueText)
+  
+  lines.push('\nRewrite the scene entirely to incorporate the feedback from the critique. Output ONLY the finalized prose for the scene without any meta-commentary, introductions, or apologies.')
+  
+  return lines.join('\n')
+}

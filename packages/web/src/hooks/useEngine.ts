@@ -65,6 +65,12 @@ export function useEngine() {
           case 'scene-start':
             dispatch({ type: 'SCENE_START', sceneIndex: event.sceneIndex, beat: event.beat })
             break
+          case 'draft-complete':
+            dispatch({ type: 'DRAFT_COMPLETE', text: event.text })
+            break
+          case 'critique-complete':
+            dispatch({ type: 'CRITIQUE_COMPLETE', text: event.text })
+            break
           case 'text-delta':
             dispatch({ type: 'TEXT_DELTA', text: event.text })
             break
@@ -111,6 +117,12 @@ export function useEngine() {
         switch (event.type) {
           case 'scene-start':
             dispatch({ type: 'SCENE_START', sceneIndex: event.sceneIndex, beat: event.beat })
+            break
+          case 'draft-complete':
+            dispatch({ type: 'DRAFT_COMPLETE', text: event.text })
+            break
+          case 'critique-complete':
+            dispatch({ type: 'CRITIQUE_COMPLETE', text: event.text })
             break
           case 'text-delta':
             dispatch({ type: 'TEXT_DELTA', text: event.text })

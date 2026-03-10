@@ -158,6 +158,10 @@ export class NarrativeSession {
         if (this._onSceneStream) {
           if (event.type === 'scene-start') {
             this._onSceneStream({ type: 'scene-start', sceneIndex: event.sceneIndex, beat: event.beat })
+          } else if (event.type === 'draft-complete') {
+            this._onSceneStream({ type: 'draft-complete', text: event.text, sceneIndex: event.sceneIndex })
+          } else if (event.type === 'critique-complete') {
+            this._onSceneStream({ type: 'critique-complete', text: event.text, sceneIndex: event.sceneIndex })
           } else if (event.type === 'text-delta') {
             this._onSceneStream({ type: 'text-delta', text: event.text, sceneIndex: event.sceneIndex })
           } else if (event.type === 'scene-complete') {
@@ -177,6 +181,10 @@ export class NarrativeSession {
         if (this._onSceneStream) {
           if (event.type === 'scene-start') {
             this._onSceneStream({ type: 'scene-start', sceneIndex: event.sceneIndex, beat: event.beat })
+          } else if (event.type === 'draft-complete') {
+            this._onSceneStream({ type: 'draft-complete', text: event.text, sceneIndex: event.sceneIndex })
+          } else if (event.type === 'critique-complete') {
+            this._onSceneStream({ type: 'critique-complete', text: event.text, sceneIndex: event.sceneIndex })
           } else if (event.type === 'text-delta') {
             this._onSceneStream({ type: 'text-delta', text: event.text, sceneIndex: event.sceneIndex })
           } else if (event.type === 'scene-complete') {

@@ -31,7 +31,7 @@ export const generateCommand = new Command('generate')
 
     const engine =
       (config.engine as { extend?: (c: Record<string, unknown>) => unknown })?.extend?.(engineConfig) ??
-      Engine.create(engineConfig)
+      new Engine(engineConfig)
 
     const story = await (engine as { generate: (input: Record<string, unknown>) => Promise<unknown> }).generate({
       world: config.world,

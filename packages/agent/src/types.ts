@@ -33,6 +33,8 @@ export type SceneStreamCallback = (event: SceneStreamEvent) => void
 
 export type SceneStreamEvent =
   | { type: 'scene-start'; sceneIndex: number; beat?: BeatData }
+  | { type: 'draft-complete'; text: string; sceneIndex: number }
+  | { type: 'critique-complete'; text: string; sceneIndex: number }
   | { type: 'text-delta'; text: string; sceneIndex: number }
   | { type: 'scene-complete'; sceneIndex: number }
 

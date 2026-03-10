@@ -1,6 +1,6 @@
 import { generateText, streamText as aiStreamText, type LanguageModel } from 'ai'
 import { GenerationError } from './errors.js'
-import { buildSceneAnalysisPrompt, buildScenePrompt, buildSummaryPrompt, buildSystemPrompt } from './prompt.js'
+import { buildSceneAnalysisPrompt, buildScenePrompt, buildSummaryPrompt, buildSystemPrompt, buildCritiquePrompt, buildRevisionPrompt } from './prompt.js'
 import type { PromptContext } from './prompt.js'
 import { resolveModel, type ProviderConfig } from './provider.js'
 import { Scene } from './scene.js'
@@ -284,14 +284,38 @@ export class Engine {
 
       let sceneText: string
       try {
-        const result = await generateText({
+        // Step 1: Draft
+        const draftResult = await generateText({
           model,
           system: systemPrompt,
           prompt: scenePrompt,
           temperature,
           maxTokens,
         })
-        sceneText = result.text
+        const draftText = draftResult.text
+
+        // Step 2: Critique
+        const critiquePrompt = buildCritiquePrompt(promptCtx, draftText)
+        const critiqueResult = await generateText({
+          model,
+          system: 'You are an expert story editor analyzing a scene.',
+          prompt: critiquePrompt,
+          temperature: 0.3,
+          maxTokens: 512,
+        })
+        const critiqueText = critiqueResult.text
+
+        // Step 3: Revise
+        const revisionPrompt = buildRevisionPrompt(promptCtx, draftText, critiqueText)
+        const revisionResult = await generateText({
+          model,
+          system: systemPrompt,
+          prompt: revisionPrompt,
+          temperature,
+          maxTokens,
+        })
+        
+        sceneText = revisionResult.text
       } catch (error) {
         throw new GenerationError(
           `Failed to generate scene for beat "${beat.name}": ${error instanceof Error ? error.message : String(error)}`
@@ -363,10 +387,35 @@ export class Engine {
 
       let sceneText: string
       try {
-        const result = aiStreamText({
+        // Step 1: Draft
+        const draftResult = await generateText({
           model,
           system: systemPrompt,
           prompt: scenePrompt,
+          temperature,
+          maxTokens,
+        })
+        const draftText = draftResult.text
+        yield { type: 'draft-complete' as const, text: draftText, sceneIndex }
+
+        // Step 2: Critique
+        const critiquePrompt = buildCritiquePrompt(promptCtx, draftText)
+        const critiqueResult = await generateText({
+          model,
+          system: 'You are an expert story editor analyzing a scene.',
+          prompt: critiquePrompt,
+          temperature: 0.3,
+          maxTokens: 512,
+        })
+        const critiqueText = critiqueResult.text
+        yield { type: 'critique-complete' as const, text: critiqueText, sceneIndex }
+
+        // Step 3: Revise and Stream
+        const revisionPrompt = buildRevisionPrompt(promptCtx, draftText, critiqueText)
+        const result = aiStreamText({
+          model,
+          system: systemPrompt,
+          prompt: revisionPrompt,
           temperature,
           maxTokens,
         })
