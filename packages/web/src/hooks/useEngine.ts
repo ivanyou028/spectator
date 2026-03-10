@@ -32,16 +32,20 @@ export function useEngine() {
 
     try {
       const engine = createEngine()
-      const chars = state.characters.filter((c) => c.name.trim() !== '')
+      let chars = state.characters.filter((c) => c.name.trim() !== '')
       if (chars.length === 0) {
-        throw new Error('At least one character with a name is required')
+        chars = [{ name: 'Protagonist' }]
       }
+
+      const prompt = state.prompt.trim()
+      const advancedInstructions = state.instructions.trim()
+      const instructions = [prompt, advancedInstructions].filter(Boolean).join('\n\n') || undefined
 
       const stream = engine.streamText({
         world: Object.keys(state.world).length > 0 ? state.world : undefined,
         characters: chars,
         plot: state.plot ?? undefined,
-        instructions: state.instructions || undefined,
+        instructions,
       })
 
       for await (const event of stream) {
@@ -76,7 +80,7 @@ export function useEngine() {
     } finally {
       generatingRef.current = false
     }
-  }, [createEngine, state.world, state.characters, state.plot, state.instructions, dispatch])
+  }, [createEngine, state.prompt, state.world, state.characters, state.plot, state.instructions, dispatch])
 
   const continueStory = useCallback(async () => {
     if (generatingRef.current || !state.story) return

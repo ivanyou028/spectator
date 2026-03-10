@@ -6,8 +6,9 @@ export function GenerateButton() {
   const { state } = usePlayground()
 
   const hasCharacters = state.characters.some((c) => c.name.trim() !== '')
+  const hasPrompt = state.prompt.trim().length > 0
   const hasApiKey = state.engineConfig.apiKey.length > 0
-  const canGenerate = hasCharacters && hasApiKey && !isGenerating
+  const canGenerate = (hasCharacters || hasPrompt) && hasApiKey && !isGenerating
 
   return (
     <div className="pt-2">

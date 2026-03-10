@@ -27,6 +27,7 @@ export interface EngineConfig {
 
 export interface PlaygroundState {
   engineConfig: EngineConfig
+  prompt: string
   world: WorldInput
   characters: CharacterInput[]
   plot: PlotInput | null
@@ -46,6 +47,7 @@ export interface PlaygroundState {
 
 export type PlaygroundAction =
   | { type: 'SET_ENGINE_CONFIG'; payload: Partial<EngineConfig> }
+  | { type: 'SET_PROMPT'; payload: string }
   | { type: 'SET_WORLD'; payload: WorldInput }
   | { type: 'SET_CHARACTERS'; payload: CharacterInput[] }
   | { type: 'ADD_CHARACTER'; payload: CharacterInput }
@@ -72,8 +74,9 @@ export const initialState: PlaygroundState = {
     temperature: 0.8,
     maxTokens: 2048,
   },
+  prompt: '',
   world: {},
-  characters: [{ name: '', traits: [] }],
+  characters: [],
   plot: null,
   instructions: '',
   status: 'idle',
@@ -92,6 +95,9 @@ export function playgroundReducer(
   switch (action.type) {
     case 'SET_ENGINE_CONFIG':
       return { ...state, engineConfig: { ...state.engineConfig, ...action.payload } }
+
+    case 'SET_PROMPT':
+      return { ...state, prompt: action.payload }
 
     case 'SET_WORLD':
       return { ...state, world: action.payload }
