@@ -24,7 +24,6 @@ import { CharacterNode } from './nodes/CharacterNode.js'
 import { BeatNode } from './nodes/BeatNode.js'
 import { compileGraph } from '../../utils/graph-compiler.js'
 import { CoPilotChat } from './CoPilotChat.js'
-import { useBiDirectionalSync } from '../../hooks/useBiDirectionalSync.js'
 
 const NODE_TYPES = {
   world: WorldNode,
@@ -41,8 +40,6 @@ export function VisualEditor() {
   const { generate } = useEngine()
   const [isGenerating, setIsGenerating] = useState(false)
 
-  // Start continuous bi-directional syncing loop between stores
-  useBiDirectionalSync()
 
   // We connect react-flow's internal state mechanism directly to our global context actions
   const onNodesChange = useCallback(
