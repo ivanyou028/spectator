@@ -11,6 +11,9 @@ export function compileGraph(nodes: Node[], edges: Edge[]): CompiledGraph {
   // 1. World Data
   const worldNode = nodes.find((n) => n.type === 'world')
   const world: WorldInput = {}
+  if (worldNode) {
+    world.id = worldNode.id
+  }
   if (worldNode?.data) {
     if (worldNode.data.genre) world.genre = worldNode.data.genre as string
     if (worldNode.data.setting) world.setting = worldNode.data.setting as string
@@ -29,6 +32,7 @@ export function compileGraph(nodes: Node[], edges: Edge[]): CompiledGraph {
       : []
 
     return {
+      id: node.id,
       name: (data.name as string) || 'Unknown Character',
       traits,
       goals,
@@ -57,6 +61,7 @@ export function compileGraph(nodes: Node[], edges: Edge[]): CompiledGraph {
       visited.add(currentBeatNode.id)
       
       compiledBeats.push({
+        id: currentBeatNode.id,
         name: (currentBeatNode.data.name as string) || 'Unnamed Beat',
         type: (currentBeatNode.data.type as any) || 'setup',
         description: currentBeatNode.data.description as string,

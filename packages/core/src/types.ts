@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 export const WorldSchema = z.object({
+  id: z.string().optional(),
   genre: z.string().optional(),
   setting: z.string().optional(),
   rules: z.array(z.string()).optional(),
@@ -16,6 +17,7 @@ export const RelationshipSchema = z.object({
 })
 
 export const CharacterSchema = z.object({
+  id: z.string().optional(),
   name: z.string().min(1),
   traits: z.array(z.string()).optional(),
   backstory: z.string().optional(),
@@ -26,6 +28,7 @@ export const CharacterSchema = z.object({
 })
 
 export const BeatSchema = z.object({
+  id: z.string().optional(),
   name: z.string(),
   description: z.string().optional(),
   type: z

@@ -10,7 +10,14 @@ export function CharacterList() {
         <h2 className="text-sm font-medium text-zinc-300">Characters</h2>
         <button
           type="button"
-          onClick={() => dispatch({ type: 'ADD_CHARACTER', payload: { name: '', traits: [] } })}
+          onClick={() => dispatch({ 
+            type: 'ADD_CHARACTER', 
+            payload: { 
+              id: `char-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              name: '', 
+              traits: [] 
+            } 
+          })}
           className="rounded px-2 py-1 text-xs text-indigo-400 hover:bg-indigo-500/10"
         >
           + Add

@@ -11,13 +11,16 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.0",
     "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/react": "^3.0.118",
     "@spectator/presets": "workspace:*",
     "@xyflow/react": "^12.10.1",
     "ai": "^4.0.0",
     "framer-motion": "^12.35.2",
+    "lucide-react": "^0.577.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "spectator": "workspace:*"
+    "spectator": "workspace:*",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",

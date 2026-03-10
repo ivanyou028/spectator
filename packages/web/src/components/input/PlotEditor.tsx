@@ -19,7 +19,10 @@ export function PlotEditor() {
 
   function addBeat() {
     const beats = plot?.beats ?? []
-    setPlot([...beats, { name: '' }])
+    setPlot([...beats, { 
+      id: `beat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      name: '' 
+    }])
   }
 
   function updateBeat(index: number, beat: BeatInput) {
