@@ -87,8 +87,8 @@ describe('Engine', () => {
       })
 
       expect(story.sceneCount).toBe(3)
-      // generateText called once per scene + once for summary per scene = 6 calls
-      expect(generateText).toHaveBeenCalledTimes(6)
+      // generateText called 4× per scene (draft + critique + revise + analysis) = 12 calls
+      expect(generateText).toHaveBeenCalledTimes(12)
     })
 
     it('accepts class instances', async () => {
@@ -241,12 +241,13 @@ describe('Engine', () => {
         },
       })
 
-      // The 3rd generateText call is the 2nd scene generation (call 1=scene, 2=analysis, 3=scene, 4=analysis)
-      // The prompt for scene 2 should include character state from scene 1
+      // Per scene: draft + critique + revise + analysis = 4 generateText calls
+      // Scene 1: calls[0..3], Scene 2: calls[4..7]
+      // Scene 2's draft prompt (calls[4]) should include character state from scene 1
       const calls = vi.mocked(generateText).mock.calls
-      const secondSceneCall = calls[2]
-      expect(secondSceneCall[0].prompt).toContain('Current Character States')
-      expect(secondSceneCall[0].prompt).toContain('contemplative, restless')
+      const secondSceneDraft = calls[4]
+      expect(secondSceneDraft[0].prompt).toContain('Current Character States')
+      expect(secondSceneDraft[0].prompt).toContain('contemplative, restless')
     })
   })
 
@@ -370,18 +371,21 @@ describe('Engine', () => {
         })
         .toStory()
 
-      // streamText (AI SDK) is called once per scene for text generation
-      const streamCalls = vi.mocked(aiStreamText).mock.calls
-      expect(streamCalls).toHaveLength(2)
-
-      // Second scene's prompt should contain character state info
-      const secondCall = streamCalls[1]
-      expect((secondCall[0] as any).prompt).toContain('Current Character States')
-      expect((secondCall[0] as any).prompt).toContain('contemplative, restless')
+      // Per scene in streamText mode: draft(generateText) + critique(generateText) + revise(streamText) + analysis(generateText)
+      // Scene 2's draft is the 4th generateText call (index 3)
+      const genCalls = vi.mocked(generateText).mock.calls
+      const secondSceneDraft = genCalls[3]
+      expect((secondSceneDraft[0] as any).prompt).toContain('Current Character States')
+      expect((secondSceneDraft[0] as any).prompt).toContain('contemplative, restless')
     })
 
     it('handles analysis failure gracefully', async () => {
-      vi.mocked(generateText).mockRejectedValue(new Error('Analysis failed'))
+      // Draft and critique succeed, but analysis (and its summary fallback) fail
+      vi.mocked(generateText)
+        .mockReset()
+        .mockResolvedValueOnce({ text: fullSceneText } as any) // draft
+        .mockResolvedValueOnce({ text: 'Some critique' } as any) // critique
+        .mockRejectedValue(new Error('Analysis failed')) // analysis + fallback
 
       const engine = new Engine({ provider: 'anthropic' })
       const events: StreamEvent[] = []

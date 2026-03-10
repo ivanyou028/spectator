@@ -7,7 +7,7 @@ Token-level streaming with event handling for real-time text display.
 ## Code
 
 ```typescript
-import { Engine, Character, Plot } from 'spectator'
+import { Engine, Character, Plot } from '@spectator/core'
 import '@spectator/presets'
 
 async function main() {

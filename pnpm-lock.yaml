@@ -29,12 +29,12 @@ importers:
       '@ai-sdk/openai':
         specifier: '>=1.0.0'
         version: 1.3.24(zod@3.25.76)
+      '@spectator/core':
+        specifier: workspace:*
+        version: link:../core
       ai:
         specifier: ^4.0.0
         version: 4.3.19(react@19.2.4)(zod@3.25.76)
-      spectator:
-        specifier: workspace:*
-        version: link:../core
       zod:
         specifier: ^3.24.0
         version: 3.25.76
@@ -51,15 +51,15 @@ importers:
 
   packages/cli:
     dependencies:
+      '@spectator/core':
+        specifier: workspace:*
+        version: link:../core
       '@spectator/presets':
         specifier: workspace:*
         version: link:../presets
       commander:
         specifier: ^14.0.0
         version: 14.0.3
-      spectator:
-        specifier: workspace:*
-        version: link:../core
     devDependencies:
       tsup:
         specifier: ^8.5.0
@@ -95,7 +95,7 @@ importers:
 
   packages/presets:
     dependencies:
-      spectator:
+      '@spectator/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -120,6 +120,9 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.118
         version: 3.0.118(react@19.2.4)(zod@3.25.76)
+      '@spectator/core':
+        specifier: workspace:*
+        version: link:../core
       '@spectator/presets':
         specifier: workspace:*
         version: link:../presets
@@ -141,9 +144,6 @@ importers:
       react-dom:
         specifier: ^19.0.0
         version: 19.2.4(react@19.2.4)
-      spectator:
-        specifier: workspace:*
-        version: link:../core
       zod:
         specifier: ^3.25.76
         version: 3.25.76

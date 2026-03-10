@@ -2,7 +2,7 @@ import { Command } from 'commander'
 import { writeFileSync, existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-const CONFIG_TEMPLATE = (provider: string, genre: string) => `import { World, Character, Plot, Engine } from 'spectator'
+const CONFIG_TEMPLATE = (provider: string, genre: string) => `import { World, Character, Plot, Engine } from '@spectator/core'
 
 const world = World.create({
   genre: '${genre}',

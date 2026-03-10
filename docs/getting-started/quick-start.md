@@ -5,7 +5,7 @@ Generate your first AI-powered story in under a minute.
 ## Full Example
 
 ```typescript
-import { Engine, World, Character, Plot } from 'spectator'
+import { Engine, World, Character, Plot } from '@spectator/core'
 import '@spectator/presets'
 
 // 1. Define your world
@@ -58,7 +58,7 @@ console.log(`\n${story.sceneCount} scenes, ${story.wordCount} words`)
 You don't need `@spectator/presets`. Define everything inline:
 
 ```typescript
-import { Engine, Character, Plot } from 'spectator'
+import { Engine, Character, Plot } from '@spectator/core'
 
 const engine = new Engine({ provider: 'anthropic' })
 

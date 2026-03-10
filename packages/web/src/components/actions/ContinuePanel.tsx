@@ -1,7 +1,7 @@
 import { usePlayground } from '../../stores/playground.js'
 import { useEngine } from '../../hooks/useEngine.js'
 import { BeatEditor } from '../input/BeatEditor.js'
-import type { BeatInput } from 'spectator'
+import type { BeatInput } from '@spectator/core'
 
 export function ContinuePanel() {
   const { state, dispatch } = usePlayground()

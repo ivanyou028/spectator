@@ -7,7 +7,7 @@ A simple fantasy story using presets for the world, plot, and character archetyp
 ## Code
 
 ```typescript
-import { Engine, World, Character, Plot } from 'spectator'
+import { Engine, World, Character, Plot } from '@spectator/core'
 import '@spectator/presets'
 
 const world = World.create({

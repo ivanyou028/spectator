@@ -13,13 +13,22 @@
     }
   },
   "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanyou028/spectator.git",
+    "directory": "packages/presets"
+  },
+  "homepage": "https://ivanyou028.github.io/spectator/",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run"
   },
   "dependencies": {
-    "spectator": "workspace:*"
+    "@spectator/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.5.0",

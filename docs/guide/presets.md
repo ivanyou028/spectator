@@ -50,7 +50,7 @@ Importing `@spectator/presets` registers three plot templates:
 ```typescript
 import '@spectator/presets' // side-effect import registers templates
 
-import { Plot } from 'spectator'
+import { Plot } from '@spectator/core'
 
 const plot = Plot.template('hero-journey')
 const plot = Plot.template('mystery')

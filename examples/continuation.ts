@@ -1,4 +1,4 @@
-import { Engine, Character } from 'spectator'
+import { Engine, Character } from '@spectator/core'
 
 async function main() {
   const engine = new Engine({ provider: 'anthropic' })

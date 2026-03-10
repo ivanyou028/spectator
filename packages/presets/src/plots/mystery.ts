@@ -1,4 +1,4 @@
-import { Plot } from 'spectator'
+import { Plot } from '@spectator/core'
 
 Plot.registerTemplate('mystery', {
   beats: [

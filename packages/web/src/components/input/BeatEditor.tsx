@@ -1,4 +1,4 @@
-import type { BeatInput } from 'spectator'
+import type { BeatInput } from '@spectator/core'
 
 const BEAT_TYPES = [
   '', 'setup', 'inciting-incident', 'rising-action', 'midpoint',

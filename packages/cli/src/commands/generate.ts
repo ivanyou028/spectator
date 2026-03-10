@@ -23,7 +23,7 @@ export const generateCommand = new Command('generate')
       process.exit(1)
     }
 
-    const { Engine } = await import('spectator')
+    const { Engine } = await import('@spectator/core')
 
     const engineConfig: Record<string, unknown> = {}
     if (options.provider) engineConfig.provider = options.provider

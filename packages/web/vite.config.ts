@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     ],
     optimizeDeps: {
       include: [
-        'spectator',
+        '@spectator/core',
         '@spectator/presets',
         '@ai-sdk/anthropic',
         '@ai-sdk/openai',

@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "spectator": "workspace:*",
+    "@spectator/core": "workspace:*",
     "@spectator/presets": "workspace:*"
   }
 }

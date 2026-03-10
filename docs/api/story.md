@@ -5,8 +5,8 @@ The `Story` class represents a complete generated story — a collection of scen
 ## Import
 
 ```typescript
-import { Story } from 'spectator'
-import type { StoryInput, StoryData } from 'spectator'
+import { Story } from '@spectator/core'
+import type { StoryInput, StoryData } from '@spectator/core'
 ```
 
 ## Constructor

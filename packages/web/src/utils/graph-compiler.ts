@@ -1,5 +1,5 @@
 import { type Node, type Edge } from '@xyflow/react'
-import type { WorldInput, CharacterInput, PlotInput, BeatInput } from 'spectator'
+import type { WorldInput, CharacterInput, PlotInput, BeatInput } from '@spectator/core'
 
 export interface CompiledGraph {
   world: WorldInput

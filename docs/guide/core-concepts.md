@@ -7,7 +7,7 @@ Spectator models stories as structured data — not just text. Every story is co
 A `World` defines the setting, genre, tone, and rules of the story universe.
 
 ```typescript
-import { World } from 'spectator'
+import { World } from '@spectator/core'
 
 const world = World.create({
   genre: 'cyberpunk',
@@ -34,7 +34,7 @@ const darkWorld = world.extend({ tone: 'bleak and hopeless' })
 Characters are defined with a name (required) and optional traits, backstory, goals, personality, and relationships.
 
 ```typescript
-import { Character } from 'spectator'
+import { Character } from '@spectator/core'
 
 const zero = Character.create({
   name: 'Zero',
@@ -86,7 +86,7 @@ The `type` field is freeform — use whatever describes the relationship: `'neme
 A `Plot` defines the narrative structure through a sequence of **beats** — named story checkpoints that guide generation.
 
 ```typescript
-import { Plot } from 'spectator'
+import { Plot } from '@spectator/core'
 
 const plot = Plot.create({
   name: 'The Memory Job',

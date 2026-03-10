@@ -7,7 +7,7 @@ import type {
   BeatData,
   CharacterStateData,
   StoryData,
-} from 'spectator'
+} from '@spectator/core'
 
 export interface SceneDisplayData {
   sceneIndex: number

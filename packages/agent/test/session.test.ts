@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { StoryData, SceneData, BeatData } from 'spectator'
+import type { StoryData, SceneData, BeatData } from '@spectator/core'
 import type { SceneStreamEvent } from '../src/types.js'
 
 // Mock scene data
@@ -60,7 +60,7 @@ function createMockStoryStream(scene: SceneData, existingScenes: SceneData[] = [
 const mockStreamText = vi.fn()
 const mockContinueStreamText = vi.fn()
 
-vi.mock('spectator', () => ({
+vi.mock('@spectator/core', () => ({
   Engine: vi.fn().mockImplementation(() => ({
     streamText: mockStreamText,
     continueStreamText: mockContinueStreamText,

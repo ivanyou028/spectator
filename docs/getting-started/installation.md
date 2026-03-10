@@ -3,20 +3,20 @@
 ## Install Spectator
 
 ```bash
-npm install spectator
+npm install @spectator/core
 ```
 
 Or with your preferred package manager:
 
 ::: code-group
 ```bash [pnpm]
-pnpm add spectator
+pnpm add @spectator/core
 ```
 ```bash [yarn]
-yarn add spectator
+yarn add @spectator/core
 ```
 ```bash [npm]
-npm install spectator
+npm install @spectator/core
 ```
 :::
 

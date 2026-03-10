@@ -5,8 +5,8 @@ The `Plot` class defines narrative structure through a sequence of beats. Plots 
 ## Import
 
 ```typescript
-import { Plot } from 'spectator'
-import type { PlotInput, PlotData, BeatInput, BeatData } from 'spectator'
+import { Plot } from '@spectator/core'
+import type { PlotInput, PlotData, BeatInput, BeatData } from '@spectator/core'
 ```
 
 ## Static Methods

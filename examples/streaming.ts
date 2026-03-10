@@ -1,4 +1,4 @@
-import { Engine, Character, Plot } from 'spectator'
+import { Engine, Character, Plot } from '@spectator/core'
 import '@spectator/presets'
 
 async function main() {

@@ -1,4 +1,4 @@
-import { Character } from 'spectator'
+import { Character } from '@spectator/core'
 
 export const archetypes = {
   hero(name: string) {

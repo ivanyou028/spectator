@@ -1,4 +1,4 @@
-import { World } from 'spectator'
+import { World } from '@spectator/core'
 
 export const noirWorld = World.create({
   genre: 'noir',

@@ -7,12 +7,21 @@
     "spectator": "./dist/index.js"
   },
   "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanyou028/spectator.git",
+    "directory": "packages/cli"
+  },
+  "homepage": "https://ivanyou028.github.io/spectator/",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "spectator": "workspace:*",
+    "@spectator/core": "workspace:*",
     "@spectator/presets": "workspace:*",
     "commander": "^14.0.0"
   },

@@ -1,20 +1,34 @@
-# Spectator
+<p align="center">
+  <h1 align="center">Spectator</h1>
+  <p align="center">A TypeScript engine that turns structured world/character/plot inputs into streaming, stateful multi-scene narratives with AI.</p>
+</p>
 
-**A Relational Narrative Engine for AI-Driven Content Creation**
+<p align="center">
+  <a href="https://www.npmjs.com/package/@spectator/core"><img src="https://img.shields.io/npm/v/@spectator/core?label=%40spectator%2Fcore" alt="npm version"></a>
+  <a href="https://github.com/ivanyou028/spectator/actions/workflows/ci.yml"><img src="https://github.com/ivanyou028/spectator/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/ivanyou028/spectator/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ivanyou028/spectator" alt="MIT License"></a>
+</p>
 
-Spectator is an open-source TypeScript framework that treats storytelling like a physics simulation. It decouples world events from narrative delivery, generating structured stories with emotional pacing, character state tracking, and multi-threaded timelines.
+---
 
 **[Documentation](https://ivanyou028.github.io/spectator/)** | **[API Reference](https://ivanyou028.github.io/spectator/api/engine)** | **[Examples](https://ivanyou028.github.io/spectator/examples/basic)**
+
+## Why Spectator?
+
+Most AI story generators produce a single blob of text. Spectator treats narrative as **structured data** — typed scenes, character state tracking across beats, emotional arcs, and a draft-critique-revise pipeline — all with first-class streaming support.
 
 ## Quick Start
 
 ```bash
-npm install spectator @ai-sdk/anthropic
+npm install @spectator/core @spectator/presets @ai-sdk/anthropic
+```
+
+```bash
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 ```typescript
-import { Engine, World, Character, Plot } from 'spectator'
+import { Engine, World, Character, Plot } from '@spectator/core'
 import '@spectator/presets'
 
 const engine = new Engine({ provider: 'anthropic' })
@@ -31,14 +45,24 @@ const story = await engine.generate({
 console.log(story.toMarkdown())
 ```
 
+## Features
+
+- **Structured output** — every story is a typed graph of scenes, beats, character states, and relationships
+- **Draft-critique-revise pipeline** — 3-step generation with editorial self-reflection
+- **Streaming** — scene-level and token-level streaming with structured event callbacks
+- **Story continuation** — extend narratives with new beats while preserving full context
+- **Character state tracking** — emotional states, goals, and relationships evolve across scenes
+- **Multi-provider** — Anthropic Claude and OpenAI via [Vercel AI SDK](https://sdk.vercel.ai/)
+- **Presets** — ready-made worlds (fantasy, sci-fi, noir), plot templates (hero's journey, three-act, mystery), and character archetypes
+
 ## Packages
 
 | Package | Description |
 |---------|-------------|
-| [`spectator`](./packages/core) | Core narrative engine |
+| [`@spectator/core`](./packages/core) | Core narrative engine |
 | [`@spectator/presets`](./packages/presets) | Built-in worlds, plots, and archetypes |
+| [`@spectator/agent`](./packages/agent) | Agentic narrative framework with tool-using AI |
 | [`@spectator/cli`](./packages/cli) | Command-line interface |
-| [`@spectator/web`](./packages/web) | Interactive web playground |
 
 ## Documentation
 

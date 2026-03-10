@@ -19,13 +19,22 @@
     }
   },
   "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ivanyou028/spectator.git",
+    "directory": "packages/agent"
+  },
+  "homepage": "https://ivanyou028.github.io/spectator/",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run"
   },
   "dependencies": {
-    "spectator": "workspace:*",
+    "@spectator/core": "workspace:*",
     "ai": "^4.0.0",
     "zod": "^3.24.0"
   },
@@ -41,5 +50,6 @@
     "tsup": "^8.5.0",
     "typescript": "^5.8.0",
     "vitest": "^3.0.0"
-  }
+  },
+  "license": "MIT"
 }

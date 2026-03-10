@@ -1,4 +1,4 @@
-import type { CharacterInput } from 'spectator'
+import type { CharacterInput } from '@spectator/core'
 import { TagInput } from '../shared/TagInput.js'
 
 interface CharacterEditorProps {

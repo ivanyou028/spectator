@@ -1,4 +1,4 @@
-import { Engine, World, Character, Plot } from 'spectator'
+import { Engine, World, Character, Plot } from '@spectator/core'
 import '@spectator/presets'
 
 const world = World.create({

@@ -1,4 +1,4 @@
-import { Story } from 'spectator'
+import { Story } from '@spectator/core'
 import { usePlayground } from '../../stores/playground.js'
 
 function downloadFile(content: string, filename: string, mimeType: string) {

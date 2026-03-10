@@ -5,8 +5,8 @@ The `Scene` class represents an individual narrative unit. Each beat in a plot g
 ## Import
 
 ```typescript
-import { Scene } from 'spectator'
-import type { SceneInput, SceneData, CharacterStateData } from 'spectator'
+import { Scene } from '@spectator/core'
+import type { SceneInput, SceneData, CharacterStateData } from '@spectator/core'
 ```
 
 ## Constructor
