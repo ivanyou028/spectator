@@ -6,12 +6,15 @@
     "dev": "pnpm -r --parallel dev",
     "test": "vitest",
     "lint": "tsc --noEmit",
-    "clean": "pnpm -r exec rm -rf dist"
+    "clean": "pnpm -r exec rm -rf dist",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs"
   },
   "devDependencies": {
+    "@types/node": "^22.0.0",
     "typescript": "^5.8.0",
-    "vitest": "^3.0.0",
-    "@types/node": "^22.0.0"
+    "vitepress": "^1.6.4",
+    "vitest": "^3.0.0"
   },
   "engines": {
     "node": ">=20",
