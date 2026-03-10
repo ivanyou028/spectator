@@ -1,20 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "framework": "vite",
   "buildCommand": "pnpm --filter @spectator-ai/core build && pnpm --filter @spectator-ai/presets build && pnpm --filter @spectator-ai/web build",
   "outputDirectory": "packages/web/dist",
   "installCommand": "pnpm install",
   "rewrites": [
-    { "source": "/api/anthropic/:path*", "destination": "https://api.anthropic.com/:path*" }
-  ],
-  "headers": [
-    {
-      "source": "/api/anthropic/:path*",
-      "headers": [
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, x-api-key, anthropic-version" }
-      ]
-    }
+    { "source": "/api/anthropic/:path*", "destination": "/api/proxy?path=:path*" }
   ]
 }
