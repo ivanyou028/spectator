@@ -65,6 +65,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
           ...newMessages,
         ],
         abortSignal: abortControllerRef.current.signal,
+        maxSteps: 5,
         tools: {
           add_world: {
             description: 'Add a World node to the canvas',
@@ -147,25 +148,49 @@ If the user asks you to connect things, use the connect_nodes tool.`,
         },
       })
 
-      // The AI SDK's streamText handles tool calls automatically via the `execute` blocks.
-      // We just need to consume the final text stream to append the assistant's response.
+      let currentMessages = [...newMessages]
+      let assistantContent: any[] = []
       
-      let fullResponse = ''
+      const updateMessages = () => {
+        const toAppend = { role: 'assistant' as const, content: assistantContent.length === 0 ? '' : [...assistantContent] }
+        setMessages([...currentMessages, toAppend])
+      }
       
-      // Initialize a new empty assistant message
-      setMessages(prev => [...prev, { role: 'assistant', content: fullResponse }])
+      updateMessages();
 
       // Wait for it to finish tools and stream its text reply
       for await (const delta of result.fullStream) {
         if (delta.type === 'text-delta') {
-          fullResponse += delta.textDelta
-          // Update the last message in real-time
-          setMessages(prev => {
-            const copy = [...prev]
-            copy[copy.length - 1] = { role: 'assistant', content: fullResponse }
-            return copy
-          })
+          const textPart = assistantContent.find(p => p.type === 'text')
+          if (textPart) textPart.text += delta.textDelta
+          else assistantContent.push({ type: 'text', text: delta.textDelta })
+          updateMessages()
         }
+        else if (delta.type === 'tool-call') {
+          assistantContent.push({ type: 'tool-call', toolCallId: delta.toolCallId, toolName: delta.toolName, args: delta.args })
+          updateMessages()
+        }
+        else if (delta.type === 'tool-result') {
+          // Finish the current assistant message
+          currentMessages = [...currentMessages, { role: 'assistant' as const, content: [...assistantContent] }]
+          
+          // Append the tool message
+          currentMessages = [...currentMessages, { 
+            role: 'tool' as const, 
+            content: [{ type: 'tool-result', toolCallId: delta.toolCallId, toolName: delta.toolName, result: delta.result }] 
+          }]
+          
+          // Reset assistant content for the next text step
+          assistantContent = []
+          updateMessages()
+        }
+      }
+
+      // Cleanup trailing empty assistant messages if needed
+      if (assistantContent.length === 0) {
+        setMessages(currentMessages)
+      } else {
+        setMessages([...currentMessages, { role: 'assistant' as const, content: assistantContent }])
       }
 
       setIsLoading(false)

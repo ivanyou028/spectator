@@ -72,7 +72,11 @@ export function CoPilotChat() {
                   </p>
                 </div>
               )}
-              {messages.map((m, i) => (
+              {messages.filter(m => {
+                if (m.role === 'tool') return false;
+                const text = typeof m.content === 'string' ? m.content : Array.isArray(m.content) ? m.content.map(part => part.type === 'text' ? part.text : '').join('') : '';
+                return text.trim() !== '';
+              }).map((m, i) => (
                 <div
                   key={i}
                   className={`flex gap-3 ${m.role === 'user' ? 'flex-row-reverse' : ''}`}
