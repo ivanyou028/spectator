@@ -74,6 +74,9 @@ export function useEngine() {
           case 'text-delta':
             dispatch({ type: 'TEXT_DELTA', text: event.text })
             break
+          case 'memory-update':
+            dispatch({ type: 'MEMORY_UPDATE', narrativeMemory: event.narrativeMemory })
+            break
           case 'scene-complete':
             dispatch({
               type: 'SCENE_COMPLETE',
@@ -126,6 +129,9 @@ export function useEngine() {
             break
           case 'text-delta':
             dispatch({ type: 'TEXT_DELTA', text: event.text })
+            break
+          case 'memory-update':
+            dispatch({ type: 'MEMORY_UPDATE', narrativeMemory: event.narrativeMemory })
             break
           case 'scene-complete':
             dispatch({

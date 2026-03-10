@@ -6,6 +6,7 @@ import type {
   StoryData,
   CharacterStateData,
   BeatData,
+  NarrativeMemoryData,
 } from '@spectator-ai/core'
 
 export interface NarrativeSessionData {
@@ -27,6 +28,7 @@ export interface StoryState {
   plot: PlotData | null
   characterStates: CharacterStateData[] | null
   lastSceneSummary: string | null
+  narrativeMemory: NarrativeMemoryData | null
 }
 
 export type SceneStreamCallback = (event: SceneStreamEvent) => void
@@ -36,6 +38,7 @@ export type SceneStreamEvent =
   | { type: 'draft-complete'; text: string; sceneIndex: number }
   | { type: 'critique-complete'; text: string; sceneIndex: number }
   | { type: 'text-delta'; text: string; sceneIndex: number }
+  | { type: 'memory-update'; narrativeMemory: NarrativeMemoryData; sceneIndex: number }
   | { type: 'scene-complete'; sceneIndex: number }
 
 export type AgentStreamEvent =

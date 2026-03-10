@@ -4,6 +4,7 @@ import { createCharacterTools } from './character-tools.js'
 import { createPlotTools } from './plot-tools.js'
 import { createSceneTools } from './scene-tools.js'
 import { createStoryTools } from './story-tools.js'
+import { createMemoryTools } from './memory-tools.js'
 import { createExportTools } from './export-tools.js'
 
 export function createNarrativeTools(session: NarrativeSession) {
@@ -13,6 +14,7 @@ export function createNarrativeTools(session: NarrativeSession) {
     ...createPlotTools(session),
     ...createSceneTools(session),
     ...createStoryTools(session),
+    ...createMemoryTools(session),
     ...createExportTools(session),
   }
 }
@@ -23,5 +25,6 @@ export {
   createPlotTools,
   createSceneTools,
   createStoryTools,
+  createMemoryTools,
   createExportTools,
 }

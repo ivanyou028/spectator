@@ -1,4 +1,5 @@
 import { usePlayground } from '../../stores/playground.js'
+import { NarrativeMemoryPanel } from './NarrativeMemoryPanel.js'
 import { SceneCard } from './SceneCard.js'
 import { StreamingText } from './StreamingText.js'
 
@@ -59,6 +60,8 @@ export function StoryOutput() {
           <StreamingText text={state.streamingScene.text} />
         </div>
       )}
+
+      <NarrativeMemoryPanel />
     </div>
   )
 }

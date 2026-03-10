@@ -1,4 +1,4 @@
-import type { BeatData } from './types.js'
+import type { BeatData, NarrativeMemoryData } from './types.js'
 import type { Scene } from './scene.js'
 import type { Story } from './story.js'
 
@@ -7,6 +7,7 @@ export type StreamEvent =
   | { type: 'draft-complete'; text: string; sceneIndex: number }
   | { type: 'critique-complete'; text: string; sceneIndex: number }
   | { type: 'text-delta'; text: string; sceneIndex: number }
+  | { type: 'memory-update'; narrativeMemory: NarrativeMemoryData; sceneIndex: number }
   | { type: 'scene-complete'; scene: Scene; sceneIndex: number }
 
 export class StoryStream {

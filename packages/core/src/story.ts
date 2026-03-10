@@ -5,6 +5,7 @@ import { StorySchema } from './types.js'
 import type {
   CharacterData,
   CharacterStateData,
+  NarrativeMemoryData,
   PlotData,
   StoryData,
   StoryInput,
@@ -60,6 +61,10 @@ export class Story {
   get characterStates(): CharacterStateData[] | undefined {
     const lastScene = this.data.scenes[this.data.scenes.length - 1]
     return lastScene?.characterStates
+  }
+
+  get narrativeMemory(): NarrativeMemoryData | undefined {
+    return this.data.narrativeMemory
   }
 
   toJSON(): StoryData {

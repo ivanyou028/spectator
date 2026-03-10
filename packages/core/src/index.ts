@@ -17,6 +17,14 @@ export {
   DynamicRelationshipSchema,
   CharacterStateSchema,
   SceneAnalysisSchema,
+  NarrativeThreadSchema,
+  CharacterArcPointSchema,
+  CharacterArcSchema,
+  RelationshipEvolutionSchema,
+  TensionPointSchema,
+  ThemeSchema,
+  NarrativeMemorySchema,
+  NarrativeMemoryAnalysisSchema,
   SceneSchema,
   StorySchema,
   EngineConfigSchema,
@@ -35,6 +43,14 @@ export type {
   CharacterStateData,
   SceneAnalysisInput,
   SceneAnalysisData,
+  NarrativeThreadData,
+  CharacterArcPointData,
+  CharacterArcData,
+  RelationshipEvolutionData,
+  TensionPointData,
+  ThemeData,
+  NarrativeMemoryData,
+  NarrativeMemoryAnalysisData,
   BeatInput,
   BeatData,
   PlotInput,
@@ -50,6 +66,8 @@ export type {
   ContinueInput,
   ContinueInputData,
 } from './types.js'
+
+export { NarrativeMemory } from './memory.js'
 
 export {
   SpectatorError,

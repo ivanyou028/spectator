@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import type { StoryData, SceneData } from '@spectator-ai/core'
+import type { StoryData, SceneData, NarrativeMemoryData } from '@spectator-ai/core'
 
 const mockScene: SceneData = {
   id: 'scene-1',
@@ -18,6 +18,67 @@ const mockScene: SceneData = {
 function createMockStoryStream(scene: SceneData, existingScenes: SceneData[] = []) {
   const allScenes = [...existingScenes, scene]
   const storyData: StoryData = { scenes: allScenes }
+  let consumed = false
+
+  return {
+    async *[Symbol.asyncIterator]() {
+      const sceneIndex = existingScenes.length
+      yield { type: 'scene-start' as const, sceneIndex, beat: scene.beat }
+      yield { type: 'text-delta' as const, text: scene.text, sceneIndex }
+      yield { type: 'scene-complete' as const, sceneIndex, scene }
+      consumed = true
+    },
+    get story() {
+      if (!consumed) throw new Error('Not yet consumed')
+      return { toJSON: () => storyData }
+    },
+  }
+}
+
+const mockNarrativeMemory: NarrativeMemoryData = {
+  characterArcs: [{
+    characterName: 'Kira',
+    trajectory: [{
+      sceneIndex: 0,
+      emotionalState: 'determined',
+      goals: ['survive'],
+      isTurningPoint: false,
+    }],
+    arcType: 'growth',
+  }],
+  threads: [
+    {
+      id: 'thread-1',
+      name: 'The prophecy',
+      type: 'foreshadowing',
+      plantedInScene: 0,
+      status: 'open',
+      description: 'An ancient prophecy was hinted at.',
+      sceneReferences: [0],
+    },
+    {
+      id: 'thread-2',
+      name: 'The betrayal',
+      type: 'subplot',
+      plantedInScene: 0,
+      status: 'resolved',
+      description: 'A minor betrayal.',
+      sceneReferences: [0],
+      resolution: 'Forgiven.',
+    },
+  ],
+  themes: [{ name: 'Courage', strength: 'emerging', sceneReferences: [0] }],
+  tensionCurve: [{ sceneIndex: 0, level: 4, direction: 'rising' }],
+  relationships: [{
+    character1: 'Kira',
+    character2: 'Ren',
+    timeline: [{ sceneIndex: 0, sentiment: 'wary' }],
+  }],
+}
+
+function createMockStoryStreamWithMemory(scene: SceneData, existingScenes: SceneData[] = []) {
+  const allScenes = [...existingScenes, scene]
+  const storyData: StoryData = { scenes: allScenes, narrativeMemory: mockNarrativeMemory }
   let consumed = false
 
   return {
@@ -382,6 +443,101 @@ describe('Narrative Tools', () => {
         { toolCallId: '1', messages: [], abortSignal: undefined as any },
       )
       expect(result.states).toBeNull()
+    })
+  })
+
+  describe('memory tools', () => {
+    const toolCallCtx = { toolCallId: '1', messages: [] as any[], abortSignal: undefined as any }
+
+    it('get_narrative_memory returns null before scenes', async () => {
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_narrative_memory.execute({}, toolCallCtx)
+      expect(result.memory).toBeNull()
+    })
+
+    it('get_narrative_memory returns memory after scene with memory', async () => {
+      session.addCharacter({ name: 'Kira' })
+      mockStreamText.mockImplementation(() => createMockStoryStreamWithMemory(mockScene))
+      await session.writeScene()
+
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_narrative_memory.execute({}, toolCallCtx)
+      expect(result.memory).toBeDefined()
+      expect(result.memory!.characterArcs).toHaveLength(1)
+      expect(result.memory!.threads).toHaveLength(2)
+    })
+
+    it('get_character_arc returns arc for known character', async () => {
+      session.addCharacter({ name: 'Kira' })
+      mockStreamText.mockImplementation(() => createMockStoryStreamWithMemory(mockScene))
+      await session.writeScene()
+
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_character_arc.execute({ character_name: 'Kira' }, toolCallCtx)
+      expect(result.arc).toBeDefined()
+      expect(result.arc!.characterName).toBe('Kira')
+      expect(result.arc!.trajectory).toHaveLength(1)
+    })
+
+    it('get_character_arc returns null for unknown character', async () => {
+      session.addCharacter({ name: 'Kira' })
+      mockStreamText.mockImplementation(() => createMockStoryStreamWithMemory(mockScene))
+      await session.writeScene()
+
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_character_arc.execute({ character_name: 'Nobody' }, toolCallCtx)
+      expect(result.arc).toBeNull()
+    })
+
+    it('get_open_threads returns only open/advanced threads', async () => {
+      session.addCharacter({ name: 'Kira' })
+      mockStreamText.mockImplementation(() => createMockStoryStreamWithMemory(mockScene))
+      await session.writeScene()
+
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_open_threads.execute({}, toolCallCtx)
+      // mockNarrativeMemory has 1 open, 1 resolved
+      expect(result.threads).toHaveLength(1)
+      expect(result.threads[0].name).toBe('The prophecy')
+      expect(result.totalThreads).toBe(2)
+    })
+
+    it('get_tension_curve returns tension data', async () => {
+      session.addCharacter({ name: 'Kira' })
+      mockStreamText.mockImplementation(() => createMockStoryStreamWithMemory(mockScene))
+      await session.writeScene()
+
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_tension_curve.execute({}, toolCallCtx)
+      expect(result.curve).toHaveLength(1)
+      expect(result.curve[0].level).toBe(4)
+      expect(result.curve[0].direction).toBe('rising')
+    })
+
+    it('get_story_health returns health analysis', async () => {
+      session.addCharacter({ name: 'Kira' })
+      mockStreamText.mockImplementation(() => createMockStoryStreamWithMemory(mockScene))
+      await session.writeScene()
+
+      const tools = createNarrativeTools(session)
+      const result = await tools.get_story_health.execute({}, toolCallCtx)
+      expect(result.health).toBeDefined()
+      expect(typeof result.issueCount).toBe('number')
+    })
+
+    it('memory tools return empty before scenes', async () => {
+      const tools = createNarrativeTools(session)
+      const arcResult = await tools.get_character_arc.execute({ character_name: 'Kira' }, toolCallCtx)
+      expect(arcResult.arc).toBeNull()
+
+      const threadsResult = await tools.get_open_threads.execute({}, toolCallCtx)
+      expect(threadsResult.threads).toEqual([])
+
+      const tensionResult = await tools.get_tension_curve.execute({}, toolCallCtx)
+      expect(tensionResult.curve).toEqual([])
+
+      const healthResult = await tools.get_story_health.execute({}, toolCallCtx)
+      expect(healthResult.health).toEqual([])
     })
   })
 

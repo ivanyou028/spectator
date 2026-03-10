@@ -8,6 +8,7 @@ export {
   createPlotTools,
   createSceneTools,
   createStoryTools,
+  createMemoryTools,
   createExportTools,
 } from './tools/index.js'
 export { buildSystemPrompt } from './prompt.js'

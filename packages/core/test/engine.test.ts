@@ -10,6 +10,12 @@ const sceneAnalysisResponse = JSON.stringify({
       relationships: [],
     },
   ],
+  arcUpdates: [{ characterName: 'Kira', isTurningPoint: false }],
+  threadUpdates: [],
+  themeUpdates: [{ name: 'Discovery', strength: 'emerging' }],
+  tensionLevel: 4,
+  tensionDirection: 'rising',
+  relationshipUpdates: [],
 })
 
 const fullSceneText =
@@ -412,6 +418,85 @@ describe('Engine', () => {
         characters: [{ name: 'Kira' }],
       })
       expect(stream).toBeInstanceOf(StoryStream)
+    })
+  })
+
+  describe('narrative memory', () => {
+    it('populates narrativeMemory on the story after generation', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const story = await engine.generate({
+        characters: [{ name: 'Kira' }],
+        plot: { beats: [{ name: 'Act 1' }, { name: 'Act 2' }] },
+      })
+
+      expect(story.narrativeMemory).toBeDefined()
+      expect(story.narrativeMemory!.characterArcs.length).toBeGreaterThan(0)
+      expect(story.narrativeMemory!.tensionCurve.length).toBe(2)
+    })
+
+    it('emits memory-update events in streamText', async () => {
+      vi.clearAllMocks()
+      callCount = 0
+      vi.mocked(generateText).mockImplementation(() => {
+        return Promise.resolve({ text: sceneAnalysisResponse }) as any
+      })
+
+      const engine = new Engine({ provider: 'anthropic' })
+      const events: StreamEvent[] = []
+
+      const storyStream = engine.streamText({
+        characters: [{ name: 'Kira' }],
+      })
+
+      for await (const event of storyStream) {
+        events.push(event)
+      }
+
+      const memoryEvents = events.filter((e) => e.type === 'memory-update')
+      expect(memoryEvents).toHaveLength(1)
+      const memEv = memoryEvents[0] as Extract<StreamEvent, { type: 'memory-update' }>
+      expect(memEv.narrativeMemory).toBeDefined()
+      expect(memEv.narrativeMemory.tensionCurve.length).toBeGreaterThan(0)
+    })
+
+    it('carries memory through continue() flow', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      expect(original.narrativeMemory).toBeDefined()
+
+      const continued = await engine.continue(original, {
+        beats: [{ name: 'Epilogue' }],
+      })
+
+      expect(continued.narrativeMemory).toBeDefined()
+      // Should have tension data for 2 scenes (original + continuation)
+      expect(continued.narrativeMemory!.tensionCurve.length).toBe(2)
+    })
+
+    it('handles StoryData without narrativeMemory field (backward compat)', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      // Create StoryData without narrativeMemory
+      const storyData = {
+        scenes: [{
+          id: 'scene-1',
+          text: 'A scene.',
+          summary: 'A summary.',
+          beat: { name: 'Act 1' },
+        }],
+        characters: [{ name: 'Kira' }],
+        createdAt: new Date().toISOString(),
+      }
+
+      // continue() should not throw
+      const continued = await engine.continue(storyData, {
+        beats: [{ name: 'Next' }],
+      })
+
+      expect(continued).toBeInstanceOf(Story)
+      expect(continued.sceneCount).toBe(2)
     })
   })
 

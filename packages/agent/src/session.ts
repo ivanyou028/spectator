@@ -9,6 +9,7 @@ import {
   type SceneData,
   type StoryData,
   type CharacterStateData,
+  type NarrativeMemoryData,
 } from '@spectator-ai/core'
 import type { NarrativeSessionData, StoryState, SceneStreamCallback } from './types.js'
 
@@ -164,6 +165,8 @@ export class NarrativeSession {
             this._onSceneStream({ type: 'critique-complete', text: event.text, sceneIndex: event.sceneIndex })
           } else if (event.type === 'text-delta') {
             this._onSceneStream({ type: 'text-delta', text: event.text, sceneIndex: event.sceneIndex })
+          } else if (event.type === 'memory-update') {
+            this._onSceneStream({ type: 'memory-update', narrativeMemory: event.narrativeMemory, sceneIndex: event.sceneIndex })
           } else if (event.type === 'scene-complete') {
             this._onSceneStream({ type: 'scene-complete', sceneIndex: event.sceneIndex })
           }
@@ -187,6 +190,8 @@ export class NarrativeSession {
             this._onSceneStream({ type: 'critique-complete', text: event.text, sceneIndex: event.sceneIndex })
           } else if (event.type === 'text-delta') {
             this._onSceneStream({ type: 'text-delta', text: event.text, sceneIndex: event.sceneIndex })
+          } else if (event.type === 'memory-update') {
+            this._onSceneStream({ type: 'memory-update', narrativeMemory: event.narrativeMemory, sceneIndex: event.sceneIndex })
           } else if (event.type === 'scene-complete') {
             this._onSceneStream({ type: 'scene-complete', sceneIndex: event.sceneIndex })
           }
@@ -232,6 +237,11 @@ export class NarrativeSession {
     return lastScene.characterStates ?? null
   }
 
+  getNarrativeMemory(): NarrativeMemoryData | null {
+    if (!this._story) return null
+    return this._story.narrativeMemory ?? null
+  }
+
   getStoryState(): StoryState {
     const lastScene = this._story?.scenes[this._story.scenes.length - 1]
     return {
@@ -245,6 +255,7 @@ export class NarrativeSession {
       plot: this._plot,
       characterStates: this.getCharacterStates(),
       lastSceneSummary: lastScene?.summary ?? null,
+      narrativeMemory: this.getNarrativeMemory(),
     }
   }
 

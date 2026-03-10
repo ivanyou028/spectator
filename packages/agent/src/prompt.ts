@@ -38,7 +38,17 @@ The story is in progress. Your job is to guide scene-by-scene generation:
 - If the user wants to go back, use \`undo_last_scene\`.
 - You can still modify the world, add characters, or adjust the plot mid-story.
 - Use \`get_story_state\` or \`get_character_states\` to check current state when needed.
-- When the user is satisfied, offer to \`export_story\` in their preferred format.`)
+- When the user is satisfied, offer to \`export_story\` in their preferred format.
+
+## Narrative Memory
+You have tools that track the story's narrative memory across all scenes:
+- \`get_narrative_memory\`: Full narrative state (arcs, threads, themes, tension, relationships)
+- \`get_character_arc\`: Detailed arc trajectory for a specific character
+- \`get_open_threads\`: Unresolved narrative threads (foreshadowing, Chekhov's guns, subplots)
+- \`get_tension_curve\`: Scene-by-scene tension/pacing data
+- \`get_story_health\`: Warnings about narrative issues (stale threads, flat pacing, etc.)
+
+Use these to check story health before writing each new scene, ensure open threads are being advanced, guide pacing via the tension curve, and maintain character arc consistency.`)
   }
 
   // Dynamic state footer
@@ -73,6 +83,21 @@ The story is in progress. Your job is to guide scene-by-scene generation:
 
   if (state.lastSceneSummary) {
     footer.push(`- Last scene: ${state.lastSceneSummary}`)
+  }
+
+  if (state.narrativeMemory) {
+    const mem = state.narrativeMemory
+    const openThreads = mem.threads.filter(
+      (t) => t.status === 'open' || t.status === 'advanced'
+    )
+    footer.push(`- Open threads: ${openThreads.length}`)
+    if (mem.themes.length > 0) {
+      footer.push(`- Themes: ${mem.themes.map((t) => t.name).join(', ')}`)
+    }
+    if (mem.tensionCurve.length > 0) {
+      const last = mem.tensionCurve[mem.tensionCurve.length - 1]
+      footer.push(`- Tension: ${last.level}/10 (${last.direction})`)
+    }
   }
 
   sections.push(footer.join('\n'))

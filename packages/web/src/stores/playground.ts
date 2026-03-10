@@ -7,6 +7,7 @@ import type {
   BeatData,
   CharacterStateData,
   StoryData,
+  NarrativeMemoryData,
 } from '@spectator-ai/core'
 
 export interface SceneDisplayData {
@@ -41,6 +42,7 @@ export interface PlaygroundState {
     text: string
   } | null
   story: StoryData | null
+  narrativeMemory: NarrativeMemoryData | null
   continuationBeats: BeatInput[]
   continuationInstructions: string
   viewMode: 'form' | 'graph'
@@ -72,6 +74,7 @@ export type PlaygroundAction =
   | { type: 'DRAFT_COMPLETE'; text: string }
   | { type: 'CRITIQUE_COMPLETE'; text: string }
   | { type: 'HYDRATE_STATE'; payload: Partial<PlaygroundState> }
+  | { type: 'MEMORY_UPDATE'; narrativeMemory: NarrativeMemoryData }
 
 export const initialState: PlaygroundState = {
   engineConfig: {
@@ -91,6 +94,7 @@ export const initialState: PlaygroundState = {
   scenes: [],
   streamingScene: null,
   story: null,
+  narrativeMemory: null,
   continuationBeats: [],
   continuationInstructions: '',
   viewMode: 'form',
@@ -183,8 +187,17 @@ export function playgroundReducer(
         streamingScene: null,
       }
 
+    case 'MEMORY_UPDATE':
+      return { ...state, narrativeMemory: action.narrativeMemory }
+
     case 'GENERATION_COMPLETE':
-      return { ...state, status: 'idle', story: action.story, streamingScene: null }
+      return {
+        ...state,
+        status: 'idle',
+        story: action.story,
+        streamingScene: null,
+        narrativeMemory: action.story.narrativeMemory ?? state.narrativeMemory,
+      }
 
     case 'GENERATION_ERROR':
       return { ...state, status: 'error', error: action.error, streamingScene: null }
@@ -195,6 +208,7 @@ export function playgroundReducer(
         scenes: [],
         streamingScene: null,
         story: null,
+        narrativeMemory: null,
         error: null,
         status: 'idle',
         continuationBeats: [],

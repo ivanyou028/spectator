@@ -72,6 +72,100 @@ export const SceneAnalysisSchema = z.object({
   characterStates: z.array(CharacterStateSchema),
 })
 
+// --- Narrative Memory Schemas ---
+
+export const NarrativeThreadSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  type: z.enum(['foreshadowing', 'chekhov-gun', 'subplot', 'mystery', 'promise', 'motif']),
+  plantedInScene: z.number().int().min(0),
+  status: z.enum(['open', 'advanced', 'resolved', 'abandoned']),
+  description: z.string(),
+  sceneReferences: z.array(z.number().int().min(0)),
+  resolution: z.string().optional(),
+})
+
+export const CharacterArcPointSchema = z.object({
+  sceneIndex: z.number().int().min(0),
+  emotionalState: z.string(),
+  goals: z.array(z.string()),
+  internalConflict: z.string().optional(),
+  isTurningPoint: z.boolean(),
+  turningPointDescription: z.string().optional(),
+})
+
+export const CharacterArcSchema = z.object({
+  characterName: z.string(),
+  trajectory: z.array(CharacterArcPointSchema),
+  arcType: z.string().optional(),
+  arcSummary: z.string().optional(),
+})
+
+export const RelationshipEvolutionSchema = z.object({
+  character1: z.string(),
+  character2: z.string(),
+  timeline: z.array(z.object({
+    sceneIndex: z.number().int().min(0),
+    sentiment: z.string(),
+    description: z.string().optional(),
+  })),
+})
+
+export const TensionPointSchema = z.object({
+  sceneIndex: z.number().int().min(0),
+  level: z.number().min(0).max(10),
+  direction: z.enum(['rising', 'falling', 'plateau', 'spike']),
+  source: z.string().optional(),
+})
+
+export const ThemeSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+  sceneReferences: z.array(z.number().int().min(0)),
+  strength: z.enum(['emerging', 'developing', 'central', 'fading']),
+})
+
+export const NarrativeMemorySchema = z.object({
+  characterArcs: z.array(CharacterArcSchema),
+  threads: z.array(NarrativeThreadSchema),
+  themes: z.array(ThemeSchema),
+  tensionCurve: z.array(TensionPointSchema),
+  relationships: z.array(RelationshipEvolutionSchema),
+})
+
+export const NarrativeMemoryAnalysisSchema = z.object({
+  summary: z.string(),
+  characterStates: z.array(CharacterStateSchema),
+  arcUpdates: z.array(z.object({
+    characterName: z.string(),
+    isTurningPoint: z.boolean(),
+    turningPointDescription: z.string().optional(),
+    arcType: z.string().optional(),
+  })),
+  threadUpdates: z.array(z.object({
+    id: z.string().optional(),
+    name: z.string(),
+    type: z.enum(['foreshadowing', 'chekhov-gun', 'subplot', 'mystery', 'promise', 'motif']),
+    status: z.enum(['open', 'advanced', 'resolved', 'abandoned']),
+    description: z.string(),
+    resolution: z.string().optional(),
+  })),
+  themeUpdates: z.array(z.object({
+    name: z.string(),
+    strength: z.enum(['emerging', 'developing', 'central', 'fading']),
+    description: z.string().optional(),
+  })),
+  tensionLevel: z.number().min(0).max(10),
+  tensionDirection: z.enum(['rising', 'falling', 'plateau', 'spike']),
+  tensionSource: z.string().optional(),
+  relationshipUpdates: z.array(z.object({
+    character1: z.string(),
+    character2: z.string(),
+    sentiment: z.string(),
+    description: z.string().optional(),
+  })),
+})
+
 export const SceneSchema = z.object({
   id: z.string(),
   beat: BeatSchema.optional(),
@@ -89,6 +183,7 @@ export const StorySchema = z.object({
   world: WorldSchema.optional(),
   characters: z.array(CharacterSchema).optional(),
   plot: PlotSchema.optional(),
+  narrativeMemory: NarrativeMemorySchema.optional(),
   metadata: z.record(z.unknown()).optional(),
   createdAt: z.string().datetime(),
 })
@@ -129,6 +224,15 @@ export type CharacterStateData = z.output<typeof CharacterStateSchema>
 
 export type SceneAnalysisInput = z.input<typeof SceneAnalysisSchema>
 export type SceneAnalysisData = z.output<typeof SceneAnalysisSchema>
+
+export type NarrativeThreadData = z.output<typeof NarrativeThreadSchema>
+export type CharacterArcPointData = z.output<typeof CharacterArcPointSchema>
+export type CharacterArcData = z.output<typeof CharacterArcSchema>
+export type RelationshipEvolutionData = z.output<typeof RelationshipEvolutionSchema>
+export type TensionPointData = z.output<typeof TensionPointSchema>
+export type ThemeData = z.output<typeof ThemeSchema>
+export type NarrativeMemoryData = z.output<typeof NarrativeMemorySchema>
+export type NarrativeMemoryAnalysisData = z.output<typeof NarrativeMemoryAnalysisSchema>
 
 export type SceneInput = z.input<typeof SceneSchema>
 export type SceneData = z.output<typeof SceneSchema>

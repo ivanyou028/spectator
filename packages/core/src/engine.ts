@@ -1,6 +1,6 @@
 import { generateText, streamText as aiStreamText, type LanguageModel } from 'ai'
 import { GenerationError } from './errors.js'
-import { buildSceneAnalysisPrompt, buildScenePrompt, buildSummaryPrompt, buildSystemPrompt, buildCritiquePrompt, buildRevisionPrompt } from './prompt.js'
+import { buildNarrativeMemoryAnalysisPrompt, buildScenePrompt, buildSummaryPrompt, buildSystemPrompt, buildCritiquePrompt, buildRevisionPrompt } from './prompt.js'
 import type { PromptContext } from './prompt.js'
 import { resolveModel, type ProviderConfig } from './provider.js'
 import { Scene } from './scene.js'
@@ -10,7 +10,8 @@ import { Story } from './story.js'
 import { Character } from './character.js'
 import { Plot } from './plot.js'
 import { World } from './world.js'
-import { ContinueInputSchema, GenerateInputSchema, SceneAnalysisSchema } from './types.js'
+import { NarrativeMemory } from './memory.js'
+import { ContinueInputSchema, GenerateInputSchema, NarrativeMemoryAnalysisSchema } from './types.js'
 import type {
   BeatData,
   CharacterData,
@@ -33,6 +34,7 @@ interface GenerationSeed {
   existingScenes: SceneData[]
   previousSummaries: string[]
   characterStates: Map<string, CharacterStateData>
+  narrativeMemory: NarrativeMemory
 }
 
 interface GenerationContext {
@@ -113,10 +115,15 @@ export class Engine {
       }
     }
 
+    const narrativeMemory = data.narrativeMemory
+      ? NarrativeMemory.fromJSON(data.narrativeMemory)
+      : new NarrativeMemory()
+
     return {
       existingScenes: [...data.scenes],
       previousSummaries,
       characterStates,
+      narrativeMemory,
     }
   }
 
@@ -125,6 +132,7 @@ export class Engine {
       existingScenes: [],
       previousSummaries: [],
       characterStates: new Map(),
+      narrativeMemory: new NarrativeMemory(),
     }
   }
 
@@ -163,13 +171,15 @@ export class Engine {
 
   private _buildStory(
     ctx: GenerationContext,
-    scenes: SceneData[]
+    scenes: SceneData[],
+    narrativeMemory?: NarrativeMemory
   ): Story {
     return new Story({
       scenes,
       world: ctx.world,
       characters: ctx.characters,
       plot: ctx.plot,
+      narrativeMemory: narrativeMemory && !narrativeMemory.isEmpty() ? narrativeMemory.toJSON() : undefined,
       createdAt: new Date().toISOString(),
     })
   }
@@ -181,20 +191,23 @@ export class Engine {
     sceneText: string,
     characterNames: string[],
     characterStates: Map<string, CharacterStateData>,
-    previousSummaries: string[]
+    previousSummaries: string[],
+    narrativeMemory: NarrativeMemory,
+    sceneIndex: number
   ): Promise<{ summary?: string; characterStates?: CharacterStateData[] }> {
     let summary: string | undefined
     let sceneCharacterStates: CharacterStateData[] | undefined
 
     try {
+      const existingMemoryData = narrativeMemory.isEmpty() ? null : narrativeMemory.toJSON()
       const analysisResult = await generateText({
         model,
-        prompt: buildSceneAnalysisPrompt(sceneText, characterNames),
+        prompt: buildNarrativeMemoryAnalysisPrompt(sceneText, characterNames, existingMemoryData, sceneIndex),
         temperature: 0.3,
-        maxTokens: 1024,
+        maxTokens: 2048,
       })
 
-      const analysisData = SceneAnalysisSchema.safeParse(
+      const analysisData = NarrativeMemoryAnalysisSchema.safeParse(
         JSON.parse(analysisResult.text)
       )
       if (analysisData.success) {
@@ -203,6 +216,7 @@ export class Engine {
         for (const state of analysisData.data.characterStates) {
           characterStates.set(state.characterName, state)
         }
+        narrativeMemory.updateFromAnalysis(sceneIndex, analysisData.data, analysisData.data.characterStates)
       }
     } catch {
       try {
@@ -228,19 +242,13 @@ export class Engine {
   // --- Generate (batch) ---
 
   async generate(input: GenerateInput): Promise<Story> {
-    const scenes: SceneData[] = []
-    for await (const scene of this.stream(input)) {
-      scenes.push(scene.toJSON())
+    const ctx = this._buildContext(input)
+    const gen = this._streamScenes(ctx)
+    let result = await gen.next()
+    while (!result.done) {
+      result = await gen.next()
     }
-
-    const parsed = this.parseInput(input)
-    return new Story({
-      scenes,
-      world: parsed.world,
-      characters: parsed.characters,
-      plot: parsed.plot,
-      createdAt: new Date().toISOString(),
-    })
+    return result.value
   }
 
   // --- Stream (scene-level) ---
@@ -262,103 +270,7 @@ export class Engine {
     const scenes: SceneData[] = [...ctx.seed.existingScenes]
     const previousSummaries = [...ctx.seed.previousSummaries]
     const characterStates = new Map(ctx.seed.characterStates)
-    const characterNames = ctx.characters.map((c) => c.name)
-
-    for (const beat of ctx.beats) {
-      const currentStates = characterNames
-        .map((name) => characterStates.get(name))
-        .filter((s): s is CharacterStateData => s !== undefined)
-
-      const promptCtx: PromptContext = {
-        world: ctx.world,
-        characters: ctx.characters,
-        plot: ctx.plot,
-        beat,
-        previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
-        characterStates: currentStates.length > 0 ? currentStates : undefined,
-        instructions: ctx.instructions,
-      }
-
-      const systemPrompt = buildSystemPrompt(promptCtx)
-      const scenePrompt = buildScenePrompt(promptCtx)
-
-      let sceneText: string
-      try {
-        // Step 1: Draft
-        const draftResult = await generateText({
-          model,
-          system: systemPrompt,
-          prompt: scenePrompt,
-          temperature,
-          maxTokens,
-        })
-        const draftText = draftResult.text
-
-        // Step 2: Critique
-        const critiquePrompt = buildCritiquePrompt(promptCtx, draftText)
-        const critiqueResult = await generateText({
-          model,
-          system: 'You are an expert story editor analyzing a scene.',
-          prompt: critiquePrompt,
-          temperature: 0.3,
-          maxTokens: 512,
-        })
-        const critiqueText = critiqueResult.text
-
-        // Step 3: Revise
-        const revisionPrompt = buildRevisionPrompt(promptCtx, draftText, critiqueText)
-        const revisionResult = await generateText({
-          model,
-          system: systemPrompt,
-          prompt: revisionPrompt,
-          temperature,
-          maxTokens,
-        })
-        
-        sceneText = revisionResult.text
-      } catch (error) {
-        throw new GenerationError(
-          `Failed to generate scene for beat "${beat.name}": ${error instanceof Error ? error.message : String(error)}`
-        )
-      }
-
-      const analysis = await this._analyzeScene(
-        model, sceneText, characterNames, characterStates, previousSummaries
-      )
-
-      const sceneData: SceneData = {
-        id: globalThis.crypto.randomUUID(),
-        beat,
-        text: sceneText,
-        summary: analysis.summary,
-        characterStates: analysis.characterStates,
-        participants: ctx.characters.map((c) => c.name),
-      }
-
-      scenes.push(sceneData)
-      yield new Scene(sceneData)
-    }
-
-    return this._buildStory(ctx, scenes)
-  }
-
-  // --- StreamText (token-level) ---
-
-  streamText(input: GenerateInput): StoryStream {
-    const ctx = this._buildContext(input)
-    return new StoryStream(this._streamTokens(ctx))
-  }
-
-  private async *_streamTokens(
-    ctx: GenerationContext
-  ): AsyncGenerator<StreamEvent, Story, undefined> {
-    const model = await this.getModel()
-    const temperature = this.options.temperature ?? 0.8
-    const maxTokens = this.options.maxTokens ?? 2048
-
-    const scenes: SceneData[] = [...ctx.seed.existingScenes]
-    const previousSummaries = [...ctx.seed.previousSummaries]
-    const characterStates = new Map(ctx.seed.characterStates)
+    const narrativeMemory = ctx.seed.narrativeMemory
     const characterNames = ctx.characters.map((c) => c.name)
     const sceneOffset = ctx.seed.existingScenes.length
 
@@ -378,6 +290,111 @@ export class Engine {
         previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
         characterStates: currentStates.length > 0 ? currentStates : undefined,
         instructions: ctx.instructions,
+        narrativeMemoryText: narrativeMemory.toPromptText(),
+      }
+
+      const systemPrompt = buildSystemPrompt(promptCtx)
+      const scenePrompt = buildScenePrompt(promptCtx)
+
+      let sceneText: string
+      try {
+        // Step 1: Draft
+        const draftResult = await generateText({
+          model,
+          system: systemPrompt,
+          prompt: scenePrompt,
+          temperature,
+          maxTokens,
+        })
+        const draftText = draftResult.text
+
+        // Step 2: Critique
+        const critiquePromptText = buildCritiquePrompt(promptCtx, draftText, narrativeMemory.toCritiqueText())
+        const critiqueResult = await generateText({
+          model,
+          system: 'You are an expert story editor analyzing a scene.',
+          prompt: critiquePromptText,
+          temperature: 0.3,
+          maxTokens: 512,
+        })
+        const critiqueText = critiqueResult.text
+
+        // Step 3: Revise
+        const revisionPrompt = buildRevisionPrompt(promptCtx, draftText, critiqueText)
+        const revisionResult = await generateText({
+          model,
+          system: systemPrompt,
+          prompt: revisionPrompt,
+          temperature,
+          maxTokens,
+        })
+
+        sceneText = revisionResult.text
+      } catch (error) {
+        throw new GenerationError(
+          `Failed to generate scene for beat "${beat.name}": ${error instanceof Error ? error.message : String(error)}`
+        )
+      }
+
+      const analysis = await this._analyzeScene(
+        model, sceneText, characterNames, characterStates, previousSummaries,
+        narrativeMemory, sceneIndex
+      )
+
+      const sceneData: SceneData = {
+        id: globalThis.crypto.randomUUID(),
+        beat,
+        text: sceneText,
+        summary: analysis.summary,
+        characterStates: analysis.characterStates,
+        participants: ctx.characters.map((c) => c.name),
+      }
+
+      scenes.push(sceneData)
+      yield new Scene(sceneData)
+    }
+
+    return this._buildStory(ctx, scenes, narrativeMemory)
+  }
+
+  // --- StreamText (token-level) ---
+
+  streamText(input: GenerateInput): StoryStream {
+    const ctx = this._buildContext(input)
+    return new StoryStream(this._streamTokens(ctx))
+  }
+
+  private async *_streamTokens(
+    ctx: GenerationContext
+  ): AsyncGenerator<StreamEvent, Story, undefined> {
+    const model = await this.getModel()
+    const temperature = this.options.temperature ?? 0.8
+    const maxTokens = this.options.maxTokens ?? 2048
+
+    const scenes: SceneData[] = [...ctx.seed.existingScenes]
+    const previousSummaries = [...ctx.seed.previousSummaries]
+    const characterStates = new Map(ctx.seed.characterStates)
+    const narrativeMemory = ctx.seed.narrativeMemory
+    const characterNames = ctx.characters.map((c) => c.name)
+    const sceneOffset = ctx.seed.existingScenes.length
+
+    for (let i = 0; i < ctx.beats.length; i++) {
+      const beat = ctx.beats[i]
+      const sceneIndex = sceneOffset + i
+
+      const currentStates = characterNames
+        .map((name) => characterStates.get(name))
+        .filter((s): s is CharacterStateData => s !== undefined)
+
+      const promptCtx: PromptContext = {
+        world: ctx.world,
+        characters: ctx.characters,
+        plot: ctx.plot,
+        beat,
+        previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
+        characterStates: currentStates.length > 0 ? currentStates : undefined,
+        instructions: ctx.instructions,
+        narrativeMemoryText: narrativeMemory.toPromptText(),
       }
 
       const systemPrompt = buildSystemPrompt(promptCtx)
@@ -399,11 +416,11 @@ export class Engine {
         yield { type: 'draft-complete' as const, text: draftText, sceneIndex }
 
         // Step 2: Critique
-        const critiquePrompt = buildCritiquePrompt(promptCtx, draftText)
+        const critiquePromptText = buildCritiquePrompt(promptCtx, draftText, narrativeMemory.toCritiqueText())
         const critiqueResult = await generateText({
           model,
           system: 'You are an expert story editor analyzing a scene.',
-          prompt: critiquePrompt,
+          prompt: critiquePromptText,
           temperature: 0.3,
           maxTokens: 512,
         })
@@ -432,8 +449,11 @@ export class Engine {
       }
 
       const analysis = await this._analyzeScene(
-        model, sceneText, characterNames, characterStates, previousSummaries
+        model, sceneText, characterNames, characterStates, previousSummaries,
+        narrativeMemory, sceneIndex
       )
+
+      yield { type: 'memory-update' as const, narrativeMemory: narrativeMemory.toJSON(), sceneIndex }
 
       const sceneData: SceneData = {
         id: globalThis.crypto.randomUUID(),
@@ -448,7 +468,7 @@ export class Engine {
       yield { type: 'scene-complete' as const, scene: new Scene(sceneData), sceneIndex }
     }
 
-    return this._buildStory(ctx, scenes)
+    return this._buildStory(ctx, scenes, narrativeMemory)
   }
 
   // --- Continue (batch) ---
