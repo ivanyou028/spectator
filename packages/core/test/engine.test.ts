@@ -410,4 +410,166 @@ describe('Engine', () => {
       expect(stream).toBeInstanceOf(StoryStream)
     })
   })
+
+  describe('continue()', () => {
+    it('returns a story with original + new scenes', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      expect(original.sceneCount).toBe(1)
+
+      const continued = await engine.continue(original, {
+        beats: [{ name: 'Epilogue' }],
+      })
+
+      expect(continued).toBeInstanceOf(Story)
+      expect(continued.sceneCount).toBe(2)
+      // Both scenes have text content
+      expect(continued.scenes[0].text.length).toBeGreaterThan(0)
+      expect(continued.scenes[1].text.length).toBeGreaterThan(0)
+    })
+
+    it('seeds character states from previous story', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      vi.clearAllMocks()
+      callCount = 0
+
+      await engine.continue(original, {
+        beats: [{ name: 'Next' }],
+      })
+
+      // The first generateText call in continue should have character states
+      const calls = vi.mocked(generateText).mock.calls
+      const sceneCall = calls[0]
+      expect(sceneCall[0].prompt).toContain('Current Character States')
+      expect(sceneCall[0].prompt).toContain('contemplative, restless')
+    })
+
+    it('seeds previous summaries from original story', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      vi.clearAllMocks()
+      callCount = 0
+
+      await engine.continue(original, {
+        beats: [{ name: 'Next' }],
+      })
+
+      const calls = vi.mocked(generateText).mock.calls
+      const sceneCall = calls[0]
+      expect(sceneCall[0].prompt).toContain('Previous Scenes')
+    })
+
+    it('defaults to single scene when no beats provided', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      const continued = await engine.continue(original)
+      expect(continued.sceneCount).toBe(2)
+    })
+
+    it('accepts raw StoryData (from JSON)', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      const json = original.toJSON()
+      const continued = await engine.continue(json, {
+        beats: [{ name: 'More' }],
+      })
+
+      expect(continued).toBeInstanceOf(Story)
+      expect(continued.sceneCount).toBe(2)
+    })
+
+    it('includes instructions in continued scene prompts', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      vi.clearAllMocks()
+      callCount = 0
+
+      await engine.continue(original, {
+        beats: [{ name: 'Next' }],
+        instructions: 'Make it dramatic',
+      })
+
+      const calls = vi.mocked(generateText).mock.calls
+      expect(calls[0][0].prompt).toContain('Make it dramatic')
+    })
+  })
+
+  describe('continueStream()', () => {
+    it('yields only new scenes', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      const newScenes: Scene[] = []
+      for await (const scene of engine.continueStream(original, {
+        beats: [{ name: 'Act 2' }, { name: 'Act 3' }],
+      })) {
+        newScenes.push(scene)
+      }
+
+      // Only yields the 2 new scenes, not the original
+      expect(newScenes).toHaveLength(2)
+      expect(newScenes[0]).toBeInstanceOf(Scene)
+    })
+  })
+
+  describe('continueStreamText()', () => {
+    beforeEach(() => {
+      vi.mocked(generateText).mockImplementation(() => {
+        return Promise.resolve({ text: sceneAnalysisResponse }) as any
+      })
+    })
+
+    it('yields events for new scenes with correct sceneIndex offset', async () => {
+      const engine = new Engine({ provider: 'anthropic' })
+      const original = await engine.generate({
+        characters: [{ name: 'Kira' }],
+      })
+
+      vi.clearAllMocks()
+      callCount = 0
+      vi.mocked(generateText).mockImplementation(() => {
+        return Promise.resolve({ text: sceneAnalysisResponse }) as any
+      })
+
+      const events: StreamEvent[] = []
+      const stream = engine.continueStreamText(original, {
+        beats: [{ name: 'Next' }],
+      })
+
+      for await (const event of stream) {
+        events.push(event)
+      }
+
+      // sceneIndex should be 1 (offset from the 1 existing scene)
+      const start = events.find((e) => e.type === 'scene-start') as Extract<
+        StreamEvent,
+        { type: 'scene-start' }
+      >
+      expect(start.sceneIndex).toBe(1)
+
+      const story = stream.story
+      expect(story.sceneCount).toBe(2)
+    })
+  })
 })

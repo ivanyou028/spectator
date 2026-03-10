@@ -10,14 +10,16 @@ import { Story } from './story.js'
 import { Character } from './character.js'
 import { Plot } from './plot.js'
 import { World } from './world.js'
-import { GenerateInputSchema, SceneAnalysisSchema } from './types.js'
+import { ContinueInputSchema, GenerateInputSchema, SceneAnalysisSchema } from './types.js'
 import type {
   BeatData,
   CharacterData,
   CharacterStateData,
+  ContinueInput,
   GenerateInput,
   PlotData,
   SceneData,
+  StoryData,
   WorldData,
 } from './types.js'
 
@@ -25,6 +27,21 @@ export interface EngineOptions extends Omit<ProviderConfig, 'model'> {
   temperature?: number
   maxTokens?: number
   model?: string | LanguageModel
+}
+
+interface GenerationSeed {
+  existingScenes: SceneData[]
+  previousSummaries: string[]
+  characterStates: Map<string, CharacterStateData>
+}
+
+interface GenerationContext {
+  world?: WorldData
+  characters: CharacterData[]
+  plot?: PlotData
+  instructions?: string
+  beats: BeatData[]
+  seed: GenerationSeed
 }
 
 export class Engine {
@@ -82,6 +99,134 @@ export class Engine {
     return validated
   }
 
+  private _extractSeed(story: Story | StoryData): GenerationSeed {
+    const data = story instanceof Story ? story.toJSON() : story
+    const previousSummaries = data.scenes
+      .map((s) => s.summary)
+      .filter((s): s is string => s !== undefined)
+
+    const characterStates = new Map<string, CharacterStateData>()
+    const lastScene = data.scenes[data.scenes.length - 1]
+    if (lastScene?.characterStates) {
+      for (const state of lastScene.characterStates) {
+        characterStates.set(state.characterName, state)
+      }
+    }
+
+    return {
+      existingScenes: [...data.scenes],
+      previousSummaries,
+      characterStates,
+    }
+  }
+
+  private _emptySeed(): GenerationSeed {
+    return {
+      existingScenes: [],
+      previousSummaries: [],
+      characterStates: new Map(),
+    }
+  }
+
+  private _buildContext(input: GenerateInput, seed?: GenerationSeed): GenerationContext {
+    const parsed = this.parseInput(input)
+    const beats: BeatData[] = parsed.plot?.beats ?? [{ name: 'Scene' }]
+    return {
+      world: parsed.world,
+      characters: parsed.characters,
+      plot: parsed.plot,
+      instructions: parsed.instructions,
+      beats,
+      seed: seed ?? this._emptySeed(),
+    }
+  }
+
+  private _buildContinueContext(
+    story: Story | StoryData,
+    input: ContinueInput
+  ): GenerationContext {
+    const data = story instanceof Story ? story.toJSON() : story
+    const validated = ContinueInputSchema.parse(input)
+    const seed = this._extractSeed(story)
+    const characters = data.characters ?? []
+    const beats: BeatData[] = validated.beats ?? [{ name: 'Scene' }]
+
+    return {
+      world: data.world,
+      characters,
+      plot: data.plot,
+      instructions: validated.instructions,
+      beats,
+      seed,
+    }
+  }
+
+  private _buildStory(
+    ctx: GenerationContext,
+    scenes: SceneData[]
+  ): Story {
+    return new Story({
+      scenes,
+      world: ctx.world,
+      characters: ctx.characters,
+      plot: ctx.plot,
+      createdAt: new Date().toISOString(),
+    })
+  }
+
+  // --- Analysis helper (shared by stream and streamText loops) ---
+
+  private async _analyzeScene(
+    model: LanguageModel,
+    sceneText: string,
+    characterNames: string[],
+    characterStates: Map<string, CharacterStateData>,
+    previousSummaries: string[]
+  ): Promise<{ summary?: string; characterStates?: CharacterStateData[] }> {
+    let summary: string | undefined
+    let sceneCharacterStates: CharacterStateData[] | undefined
+
+    try {
+      const analysisResult = await generateText({
+        model,
+        prompt: buildSceneAnalysisPrompt(sceneText, characterNames),
+        temperature: 0.3,
+        maxTokens: 1024,
+      })
+
+      const analysisData = SceneAnalysisSchema.safeParse(
+        JSON.parse(analysisResult.text)
+      )
+      if (analysisData.success) {
+        summary = analysisData.data.summary
+        sceneCharacterStates = analysisData.data.characterStates
+        for (const state of analysisData.data.characterStates) {
+          characterStates.set(state.characterName, state)
+        }
+      }
+    } catch {
+      try {
+        const summaryResult = await generateText({
+          model,
+          prompt: buildSummaryPrompt(sceneText),
+          temperature: 0.3,
+          maxTokens: 256,
+        })
+        summary = summaryResult.text
+      } catch {
+        summary = undefined
+      }
+    }
+
+    if (summary) {
+      previousSummaries.push(summary)
+    }
+
+    return { summary, characterStates: sceneCharacterStates }
+  }
+
+  // --- Generate (batch) ---
+
   async generate(input: GenerateInput): Promise<Story> {
     const scenes: SceneData[] = []
     for await (const scene of this.stream(input)) {
@@ -98,40 +243,44 @@ export class Engine {
     })
   }
 
+  // --- Stream (scene-level) ---
+
   async *stream(
     input: GenerateInput
   ): AsyncGenerator<Scene, Story, undefined> {
-    const parsed = this.parseInput(input)
+    const ctx = this._buildContext(input)
+    return yield* this._streamScenes(ctx)
+  }
+
+  private async *_streamScenes(
+    ctx: GenerationContext
+  ): AsyncGenerator<Scene, Story, undefined> {
     const model = await this.getModel()
     const temperature = this.options.temperature ?? 0.8
     const maxTokens = this.options.maxTokens ?? 2048
 
-    const beats: BeatData[] = parsed.plot?.beats ?? [
-      { name: 'Scene' },
-    ]
+    const scenes: SceneData[] = [...ctx.seed.existingScenes]
+    const previousSummaries = [...ctx.seed.previousSummaries]
+    const characterStates = new Map(ctx.seed.characterStates)
+    const characterNames = ctx.characters.map((c) => c.name)
 
-    const scenes: SceneData[] = []
-    const previousSummaries: string[] = []
-    const characterStates = new Map<string, CharacterStateData>()
-    const characterNames = parsed.characters.map((c) => c.name)
-
-    for (const beat of beats) {
+    for (const beat of ctx.beats) {
       const currentStates = characterNames
         .map((name) => characterStates.get(name))
         .filter((s): s is CharacterStateData => s !== undefined)
 
-      const ctx: PromptContext = {
-        world: parsed.world,
-        characters: parsed.characters,
-        plot: parsed.plot,
+      const promptCtx: PromptContext = {
+        world: ctx.world,
+        characters: ctx.characters,
+        plot: ctx.plot,
         beat,
         previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
         characterStates: currentStates.length > 0 ? currentStates : undefined,
-        instructions: parsed.instructions,
+        instructions: ctx.instructions,
       }
 
-      const systemPrompt = buildSystemPrompt(ctx)
-      const scenePrompt = buildScenePrompt(ctx)
+      const systemPrompt = buildSystemPrompt(promptCtx)
+      const scenePrompt = buildScenePrompt(promptCtx)
 
       let sceneText: string
       try {
@@ -149,107 +298,66 @@ export class Engine {
         )
       }
 
-      // Extract summary + character states in one call
-      let summary: string | undefined
-      let sceneCharacterStates: CharacterStateData[] | undefined
-      try {
-        const analysisResult = await generateText({
-          model,
-          prompt: buildSceneAnalysisPrompt(sceneText, characterNames),
-          temperature: 0.3,
-          maxTokens: 1024,
-        })
-
-        const parsed = SceneAnalysisSchema.safeParse(
-          JSON.parse(analysisResult.text)
-        )
-        if (parsed.success) {
-          summary = parsed.data.summary
-          sceneCharacterStates = parsed.data.characterStates
-          for (const state of parsed.data.characterStates) {
-            characterStates.set(state.characterName, state)
-          }
-        }
-      } catch {
-        // Fallback: try simple summary if analysis fails
-        try {
-          const summaryResult = await generateText({
-            model,
-            prompt: buildSummaryPrompt(sceneText),
-            temperature: 0.3,
-            maxTokens: 256,
-          })
-          summary = summaryResult.text
-        } catch {
-          summary = undefined
-        }
-      }
-
-      if (summary) {
-        previousSummaries.push(summary)
-      }
+      const analysis = await this._analyzeScene(
+        model, sceneText, characterNames, characterStates, previousSummaries
+      )
 
       const sceneData: SceneData = {
         id: globalThis.crypto.randomUUID(),
         beat,
         text: sceneText,
-        summary,
-        characterStates: sceneCharacterStates,
-        participants: parsed.characters.map((c) => c.name),
+        summary: analysis.summary,
+        characterStates: analysis.characterStates,
+        participants: ctx.characters.map((c) => c.name),
       }
 
       scenes.push(sceneData)
-      const scene = new Scene(sceneData)
-      yield scene
+      yield new Scene(sceneData)
     }
 
-    return new Story({
-      scenes,
-      world: parsed.world,
-      characters: parsed.characters,
-      plot: parsed.plot,
-      createdAt: new Date().toISOString(),
-    })
+    return this._buildStory(ctx, scenes)
   }
+
+  // --- StreamText (token-level) ---
 
   streamText(input: GenerateInput): StoryStream {
-    return new StoryStream(this._streamTokensGenerator(input))
+    const ctx = this._buildContext(input)
+    return new StoryStream(this._streamTokens(ctx))
   }
 
-  private async *_streamTokensGenerator(
-    input: GenerateInput
+  private async *_streamTokens(
+    ctx: GenerationContext
   ): AsyncGenerator<StreamEvent, Story, undefined> {
-    const parsed = this.parseInput(input)
     const model = await this.getModel()
     const temperature = this.options.temperature ?? 0.8
     const maxTokens = this.options.maxTokens ?? 2048
 
-    const beats: BeatData[] = parsed.plot?.beats ?? [{ name: 'Scene' }]
+    const scenes: SceneData[] = [...ctx.seed.existingScenes]
+    const previousSummaries = [...ctx.seed.previousSummaries]
+    const characterStates = new Map(ctx.seed.characterStates)
+    const characterNames = ctx.characters.map((c) => c.name)
+    const sceneOffset = ctx.seed.existingScenes.length
 
-    const scenes: SceneData[] = []
-    const previousSummaries: string[] = []
-    const characterStates = new Map<string, CharacterStateData>()
-    const characterNames = parsed.characters.map((c) => c.name)
-
-    for (let sceneIndex = 0; sceneIndex < beats.length; sceneIndex++) {
-      const beat = beats[sceneIndex]
+    for (let i = 0; i < ctx.beats.length; i++) {
+      const beat = ctx.beats[i]
+      const sceneIndex = sceneOffset + i
 
       const currentStates = characterNames
         .map((name) => characterStates.get(name))
         .filter((s): s is CharacterStateData => s !== undefined)
 
-      const ctx: PromptContext = {
-        world: parsed.world,
-        characters: parsed.characters,
-        plot: parsed.plot,
+      const promptCtx: PromptContext = {
+        world: ctx.world,
+        characters: ctx.characters,
+        plot: ctx.plot,
         beat,
         previousScenes: previousSummaries.length > 0 ? previousSummaries : undefined,
         characterStates: currentStates.length > 0 ? currentStates : undefined,
-        instructions: parsed.instructions,
+        instructions: ctx.instructions,
       }
 
-      const systemPrompt = buildSystemPrompt(ctx)
-      const scenePrompt = buildScenePrompt(ctx)
+      const systemPrompt = buildSystemPrompt(promptCtx)
+      const scenePrompt = buildScenePrompt(promptCtx)
 
       yield { type: 'scene-start' as const, sceneIndex, beat }
 
@@ -274,65 +382,58 @@ export class Engine {
         )
       }
 
-      let summary: string | undefined
-      let sceneCharacterStates: CharacterStateData[] | undefined
-      try {
-        const analysisResult = await generateText({
-          model,
-          prompt: buildSceneAnalysisPrompt(sceneText, characterNames),
-          temperature: 0.3,
-          maxTokens: 1024,
-        })
-
-        const analysisData = SceneAnalysisSchema.safeParse(
-          JSON.parse(analysisResult.text)
-        )
-        if (analysisData.success) {
-          summary = analysisData.data.summary
-          sceneCharacterStates = analysisData.data.characterStates
-          for (const state of analysisData.data.characterStates) {
-            characterStates.set(state.characterName, state)
-          }
-        }
-      } catch {
-        try {
-          const summaryResult = await generateText({
-            model,
-            prompt: buildSummaryPrompt(sceneText),
-            temperature: 0.3,
-            maxTokens: 256,
-          })
-          summary = summaryResult.text
-        } catch {
-          summary = undefined
-        }
-      }
-
-      if (summary) {
-        previousSummaries.push(summary)
-      }
+      const analysis = await this._analyzeScene(
+        model, sceneText, characterNames, characterStates, previousSummaries
+      )
 
       const sceneData: SceneData = {
         id: globalThis.crypto.randomUUID(),
         beat,
         text: sceneText,
-        summary,
-        characterStates: sceneCharacterStates,
-        participants: parsed.characters.map((c) => c.name),
+        summary: analysis.summary,
+        characterStates: analysis.characterStates,
+        participants: ctx.characters.map((c) => c.name),
       }
 
       scenes.push(sceneData)
-      const scene = new Scene(sceneData)
-
-      yield { type: 'scene-complete' as const, scene, sceneIndex }
+      yield { type: 'scene-complete' as const, scene: new Scene(sceneData), sceneIndex }
     }
 
-    return new Story({
-      scenes,
-      world: parsed.world,
-      characters: parsed.characters,
-      plot: parsed.plot,
-      createdAt: new Date().toISOString(),
-    })
+    return this._buildStory(ctx, scenes)
+  }
+
+  // --- Continue (batch) ---
+
+  async continue(
+    story: Story | StoryData,
+    input: ContinueInput = {}
+  ): Promise<Story> {
+    const ctx = this._buildContinueContext(story, input)
+    const gen = this._streamScenes(ctx)
+    let result = await gen.next()
+    while (!result.done) {
+      result = await gen.next()
+    }
+    return result.value
+  }
+
+  // --- ContinueStream (scene-level, yields only NEW scenes) ---
+
+  async *continueStream(
+    story: Story | StoryData,
+    input: ContinueInput = {}
+  ): AsyncGenerator<Scene, Story, undefined> {
+    const ctx = this._buildContinueContext(story, input)
+    return yield* this._streamScenes(ctx)
+  }
+
+  // --- ContinueStreamText (token-level, yields events for NEW scenes only) ---
+
+  continueStreamText(
+    story: Story | StoryData,
+    input: ContinueInput = {}
+  ): StoryStream {
+    const ctx = this._buildContinueContext(story, input)
+    return new StoryStream(this._streamTokens(ctx))
   }
 }

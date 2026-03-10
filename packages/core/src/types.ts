@@ -136,5 +136,13 @@ export type StoryData = z.output<typeof StorySchema>
 export type EngineConfigInput = z.input<typeof EngineConfigSchema>
 export type EngineConfigData = z.output<typeof EngineConfigSchema>
 
+export const ContinueInputSchema = z.object({
+  beats: z.array(BeatSchema).optional(),
+  instructions: z.string().optional(),
+})
+
 export type GenerateInput = z.input<typeof GenerateInputSchema>
 export type GenerateInputData = z.output<typeof GenerateInputSchema>
+
+export type ContinueInput = z.input<typeof ContinueInputSchema>
+export type ContinueInputData = z.output<typeof ContinueInputSchema>

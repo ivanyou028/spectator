@@ -21,6 +21,7 @@ export {
   StorySchema,
   EngineConfigSchema,
   GenerateInputSchema,
+  ContinueInputSchema,
 } from './types.js'
 
 export type {
@@ -46,6 +47,8 @@ export type {
   EngineConfigData,
   GenerateInput,
   GenerateInputData,
+  ContinueInput,
+  ContinueInputData,
 } from './types.js'
 
 export {
