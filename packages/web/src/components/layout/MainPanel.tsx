@@ -12,9 +12,9 @@ export function MainPanel() {
       {!hasOutput && state.status !== 'streaming' ? (
         <div className="flex flex-1 items-center justify-center">
           <div className="text-center">
-            <p className="text-lg text-zinc-500">Configure your story and hit Generate</p>
+            <p className="text-lg text-zinc-500">Describe your story and hit Generate</p>
             <p className="mt-1 text-sm text-zinc-600">
-              Set up a world, add characters, define plot beats, then watch the story unfold in real-time.
+              Or expand Advanced Options for full control over world, characters, and plot.
             </p>
           </div>
         </div>
