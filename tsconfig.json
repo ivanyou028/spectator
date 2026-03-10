@@ -6,6 +6,7 @@
   "references": [
     { "path": "packages/core" },
     { "path": "packages/cli" },
-    { "path": "packages/presets" }
+    { "path": "packages/presets" },
+    { "path": "packages/web" }
   ]
 }
