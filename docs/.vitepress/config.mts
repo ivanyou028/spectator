@@ -3,6 +3,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   title: 'Spectator',
   description: 'A Relational Narrative Engine for AI-Driven Content Creation',
+  base: '/spectator/',
   cleanUrls: true,
 
   themeConfig: {
