@@ -5,8 +5,8 @@ Generate your first AI-powered story in under a minute.
 ## Full Example
 
 ```typescript
-import { Engine, World, Character, Plot } from '@spectator/core'
-import '@spectator/presets'
+import { Engine, World, Character, Plot } from '@spectator-ai/core'
+import '@spectator-ai/presets'
 
 // 1. Define your world
 const world = World.create({
@@ -49,16 +49,16 @@ console.log(`\n${story.sceneCount} scenes, ${story.wordCount} words`)
 
 1. **World** defines the setting, genre, and rules of the universe
 2. **Characters** are created with traits, backstory, and goals. Relationships are added via `.withRelationship()`
-3. **Plot** provides the narrative structure as a sequence of beats (story checkpoints). `Plot.template('hero-journey')` loads a 7-beat hero's journey from `@spectator/presets`
+3. **Plot** provides the narrative structure as a sequence of beats (story checkpoints). `Plot.template('hero-journey')` loads a 7-beat hero's journey from `@spectator-ai/presets`
 4. **Engine** orchestrates the AI generation. It sends structured prompts (not just "write a story") to the LLM, generating one scene per beat
 5. **Story** is a typed object containing scenes, character states, and metadata — not just raw text
 
 ## Without Presets
 
-You don't need `@spectator/presets`. Define everything inline:
+You don't need `@spectator-ai/presets`. Define everything inline:
 
 ```typescript
-import { Engine, Character, Plot } from '@spectator/core'
+import { Engine, Character, Plot } from '@spectator-ai/core'
 
 const engine = new Engine({ provider: 'anthropic' })
 

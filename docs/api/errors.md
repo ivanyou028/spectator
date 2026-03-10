@@ -10,7 +10,7 @@ import {
   ValidationError,
   ProviderError,
   GenerationError,
-} from '@spectator/core'
+} from '@spectator-ai/core'
 ```
 
 ## Error Classes
@@ -97,7 +97,7 @@ class GenerationError extends SpectatorError {
 ## Error Handling
 
 ```typescript
-import { SpectatorError, ValidationError, GenerationError } from '@spectator/core'
+import { SpectatorError, ValidationError, GenerationError } from '@spectator-ai/core'
 
 try {
   const story = await engine.generate(input)

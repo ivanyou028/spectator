@@ -1,5 +1,5 @@
-import { Engine, World, Character, Plot } from '@spectator/core'
-import '@spectator/presets'
+import { Engine, World, Character, Plot } from '@spectator-ai/core'
+import '@spectator-ai/presets'
 
 const world = World.create({
   genre: 'fantasy',

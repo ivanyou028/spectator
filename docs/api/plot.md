@@ -5,8 +5,8 @@ The `Plot` class defines narrative structure through a sequence of beats. Plots 
 ## Import
 
 ```typescript
-import { Plot } from '@spectator/core'
-import type { PlotInput, PlotData, BeatInput, BeatData } from '@spectator/core'
+import { Plot } from '@spectator-ai/core'
+import type { PlotInput, PlotData, BeatInput, BeatData } from '@spectator-ai/core'
 ```
 
 ## Static Methods
@@ -43,7 +43,7 @@ Plot.template(name: string): Plot
 Loads a registered template by name.
 
 ```typescript
-import '@spectator/presets' // registers templates
+import '@spectator-ai/presets' // registers templates
 
 const plot = Plot.template('hero-journey')
 ```

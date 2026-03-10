@@ -20,7 +20,7 @@ import {
   EngineConfigSchema,
   GenerateInputSchema,
   ContinueInputSchema,
-} from '@spectator/core'
+} from '@spectator-ai/core'
 
 // Types
 import type {
@@ -35,7 +35,7 @@ import type {
   GenerateInput, GenerateInputData,
   ContinueInput, ContinueInputData,
   EngineConfigInput, EngineConfigData,
-} from '@spectator/core'
+} from '@spectator-ai/core'
 ```
 
 ## Convention

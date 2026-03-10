@@ -1,4 +1,4 @@
-import { World } from '@spectator/core'
+import { World } from '@spectator-ai/core'
 
 export const fantasyWorld = World.create({
   genre: 'fantasy',

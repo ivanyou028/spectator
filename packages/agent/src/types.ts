@@ -6,7 +6,7 @@ import type {
   StoryData,
   CharacterStateData,
   BeatData,
-} from '@spectator/core'
+} from '@spectator-ai/core'
 
 export interface NarrativeSessionData {
   id: string

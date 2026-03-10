@@ -1,5 +1,5 @@
 {
-  "name": "@spectator/presets",
+  "name": "@spectator-ai/presets",
   "version": "0.1.0",
   "description": "Built-in world, plot, and character presets for Spectator",
   "type": "module",
@@ -28,7 +28,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@spectator/core": "workspace:*"
+    "@spectator-ai/core": "workspace:*"
   },
   "devDependencies": {
     "tsup": "^8.5.0",

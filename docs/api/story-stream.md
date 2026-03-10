@@ -5,8 +5,8 @@ The `StoryStream` class wraps an async generator of stream events, providing ite
 ## Import
 
 ```typescript
-import { StoryStream } from '@spectator/core'
-import type { StreamEvent } from '@spectator/core'
+import { StoryStream } from '@spectator-ai/core'
+import type { StreamEvent } from '@spectator-ai/core'
 ```
 
 ## Usage

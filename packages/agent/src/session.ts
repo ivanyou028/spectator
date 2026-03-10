@@ -9,7 +9,7 @@ import {
   type SceneData,
   type StoryData,
   type CharacterStateData,
-} from '@spectator/core'
+} from '@spectator-ai/core'
 import type { NarrativeSessionData, StoryState, SceneStreamCallback } from './types.js'
 
 export class NarrativeSession {

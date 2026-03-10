@@ -5,8 +5,8 @@ The `World` class defines the setting, genre, tone, and rules of a story univers
 ## Import
 
 ```typescript
-import { World } from '@spectator/core'
-import type { WorldInput, WorldData } from '@spectator/core'
+import { World } from '@spectator-ai/core'
+import type { WorldInput, WorldData } from '@spectator-ai/core'
 ```
 
 ## Static Methods

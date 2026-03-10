@@ -1,5 +1,5 @@
 {
-  "name": "@spectator/core",
+  "name": "@spectator-ai/core",
   "version": "0.1.0",
   "description": "A composable TypeScript story engine for AI-powered narrative generation",
   "type": "module",

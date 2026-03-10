@@ -3,20 +3,20 @@
 ## Install Spectator
 
 ```bash
-npm install @spectator/core
+npm install @spectator-ai/core
 ```
 
 Or with your preferred package manager:
 
 ::: code-group
 ```bash [pnpm]
-pnpm add @spectator/core
+pnpm add @spectator-ai/core
 ```
 ```bash [yarn]
-yarn add @spectator/core
+yarn add @spectator-ai/core
 ```
 ```bash [npm]
-npm install @spectator/core
+npm install @spectator-ai/core
 ```
 :::
 
@@ -55,10 +55,10 @@ You can also pass `apiKey` directly to the Engine constructor, but environment v
 
 ## Optional: Install Presets
 
-The `@spectator/presets` package provides ready-made worlds, plot templates, and character archetypes:
+The `@spectator-ai/presets` package provides ready-made worlds, plot templates, and character archetypes:
 
 ```bash
-npm install @spectator/presets
+npm install @spectator-ai/presets
 ```
 
 ## Requirements

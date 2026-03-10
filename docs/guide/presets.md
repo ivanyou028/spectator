@@ -1,11 +1,11 @@
 # Presets
 
-The `@spectator/presets` package provides ready-made worlds, plot templates, and character archetypes to get started quickly.
+The `@spectator-ai/presets` package provides ready-made worlds, plot templates, and character archetypes to get started quickly.
 
 ## Installation
 
 ```bash
-npm install @spectator/presets
+npm install @spectator-ai/presets
 ```
 
 ## Worlds
@@ -13,7 +13,7 @@ npm install @spectator/presets
 Three pre-built worlds with genre, setting, tone, and rules:
 
 ```typescript
-import { fantasyWorld, sciFiWorld, noirWorld } from '@spectator/presets'
+import { fantasyWorld, sciFiWorld, noirWorld } from '@spectator-ai/presets'
 
 const story = await engine.generate({
   world: fantasyWorld,
@@ -45,12 +45,12 @@ const story = await engine.generate({
 
 ## Plot Templates
 
-Importing `@spectator/presets` registers three plot templates:
+Importing `@spectator-ai/presets` registers three plot templates:
 
 ```typescript
-import '@spectator/presets' // side-effect import registers templates
+import '@spectator-ai/presets' // side-effect import registers templates
 
-import { Plot } from '@spectator/core'
+import { Plot } from '@spectator-ai/core'
 
 const plot = Plot.template('hero-journey')
 const plot = Plot.template('mystery')
@@ -60,7 +60,7 @@ const plot = Plot.template('three-act')
 Or import the Plot instances directly:
 
 ```typescript
-import { herosJourney, mystery, threeAct } from '@spectator/presets'
+import { herosJourney, mystery, threeAct } from '@spectator-ai/presets'
 ```
 
 ### hero-journey (7 beats)
@@ -98,7 +98,7 @@ import { herosJourney, mystery, threeAct } from '@spectator/presets'
 Four character factory functions:
 
 ```typescript
-import { archetypes } from '@spectator/presets'
+import { archetypes } from '@spectator-ai/presets'
 
 const hero     = archetypes.hero('Kira')
 const mentor   = archetypes.mentor('Elder Thorn')

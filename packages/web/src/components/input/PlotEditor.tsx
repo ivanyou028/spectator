@@ -1,6 +1,6 @@
 import { usePlayground } from '../../stores/playground.js'
 import { BeatEditor } from './BeatEditor.js'
-import type { BeatInput } from '@spectator/core'
+import type { BeatInput } from '@spectator-ai/core'
 
 export function PlotEditor() {
   const { state, dispatch } = usePlayground()

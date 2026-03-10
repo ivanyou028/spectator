@@ -1,5 +1,5 @@
 import { useCallback, useRef } from 'react'
-import { Engine, Story } from '@spectator/core'
+import { Engine, Story } from '@spectator-ai/core'
 import type { LanguageModel } from 'ai'
 import { createAnthropic } from '@ai-sdk/anthropic'
 import { createOpenAI } from '@ai-sdk/openai'

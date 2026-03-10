@@ -7,7 +7,7 @@ Build a cyberpunk world from scratch with custom characters, relationships, plot
 ## Code
 
 ```typescript
-import { Engine, World, Character, Plot } from '@spectator/core'
+import { Engine, World, Character, Plot } from '@spectator-ai/core'
 
 const world = World.create({
   genre: 'cyberpunk',

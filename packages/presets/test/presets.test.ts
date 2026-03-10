@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { World, Character, Plot } from '@spectator/core'
+import { World, Character, Plot } from '@spectator-ai/core'
 import {
   fantasyWorld,
   sciFiWorld,

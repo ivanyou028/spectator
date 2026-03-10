@@ -1,5 +1,5 @@
 {
-  "name": "@spectator/web",
+  "name": "@spectator-ai/web",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -12,14 +12,14 @@
     "@ai-sdk/anthropic": "^1.0.0",
     "@ai-sdk/openai": "^1.0.0",
     "@ai-sdk/react": "^3.0.118",
-    "@spectator/presets": "workspace:*",
+    "@spectator-ai/presets": "workspace:*",
     "@xyflow/react": "^12.10.1",
     "ai": "^4.0.0",
     "framer-motion": "^12.35.2",
     "lucide-react": "^0.577.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "@spectator/core": "workspace:*",
+    "@spectator-ai/core": "workspace:*",
     "zod": "^3.25.76"
   },
   "devDependencies": {

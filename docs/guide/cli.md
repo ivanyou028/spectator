@@ -1,17 +1,17 @@
 # CLI
 
-The `@spectator/cli` package provides a command-line interface for generating stories without writing code.
+The `@spectator-ai/cli` package provides a command-line interface for generating stories without writing code.
 
 ## Installation
 
 ```bash
-npm install -g @spectator/cli
+npm install -g @spectator-ai/cli
 ```
 
 Or use via `npx`:
 
 ```bash
-npx @spectator/cli generate
+npx @spectator-ai/cli generate
 ```
 
 ## Commands

@@ -1,5 +1,5 @@
 {
-  "name": "@spectator/cli",
+  "name": "@spectator-ai/cli",
   "version": "0.1.0",
   "description": "CLI for Spectator story engine",
   "type": "module",
@@ -21,8 +21,8 @@
     "dev": "tsup --watch"
   },
   "dependencies": {
-    "@spectator/core": "workspace:*",
-    "@spectator/presets": "workspace:*",
+    "@spectator-ai/core": "workspace:*",
+    "@spectator-ai/presets": "workspace:*",
     "commander": "^14.0.0"
   },
   "devDependencies": {

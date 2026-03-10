@@ -1,5 +1,5 @@
-import { Engine, Character, Plot } from '@spectator/core'
-import '@spectator/presets'
+import { Engine, Character, Plot } from '@spectator-ai/core'
+import '@spectator-ai/presets'
 
 async function main() {
   const engine = new Engine({ provider: 'anthropic' })

@@ -5,7 +5,7 @@ import {
   type CoreMessage,
   type CoreToolMessage,
 } from 'ai'
-import type { EngineOptions } from '@spectator/core'
+import type { EngineOptions } from '@spectator-ai/core'
 import { NarrativeSession } from './session.js'
 import { createNarrativeTools } from './tools/index.js'
 import { buildSystemPrompt } from './prompt.js'

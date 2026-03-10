@@ -42,8 +42,8 @@ pnpm test
 spectator/
   packages/
     core/       # Main narrative engine (published as `spectator`)
-    presets/    # Built-in worlds, plots, archetypes (`@spectator/presets`)
-    cli/        # Command-line interface (`@spectator/cli`)
+    presets/    # Built-in worlds, plots, archetypes (`@spectator-ai/presets`)
+    cli/        # Command-line interface (`@spectator-ai/cli`)
     web/        # Interactive web playground
   examples/     # Runnable example scripts
 ```

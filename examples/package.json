@@ -1,9 +1,9 @@
 {
-  "name": "@spectator/examples",
+  "name": "@spectator-ai/examples",
   "private": true,
   "type": "module",
   "dependencies": {
-    "@spectator/core": "workspace:*",
-    "@spectator/presets": "workspace:*"
+    "@spectator-ai/core": "workspace:*",
+    "@spectator-ai/presets": "workspace:*"
   }
 }

@@ -5,8 +5,8 @@ The `Character` class defines story characters with traits, backstory, goals, an
 ## Import
 
 ```typescript
-import { Character } from '@spectator/core'
-import type { CharacterInput, CharacterData, RelationshipInput } from '@spectator/core'
+import { Character } from '@spectator-ai/core'
+import type { CharacterInput, CharacterData, RelationshipInput } from '@spectator-ai/core'
 ```
 
 ## Static Methods

@@ -5,8 +5,8 @@ The `Engine` class is the main entry point for story generation. It orchestrates
 ## Import
 
 ```typescript
-import { Engine } from '@spectator/core'
-import type { EngineOptions } from '@spectator/core'
+import { Engine } from '@spectator-ai/core'
+import type { EngineOptions } from '@spectator-ai/core'
 ```
 
 ## Constructor

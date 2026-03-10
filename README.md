@@ -4,7 +4,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@spectator/core"><img src="https://img.shields.io/npm/v/@spectator/core?label=%40spectator%2Fcore" alt="npm version"></a>
+  <a href="https://www.npmjs.com/package/@spectator-ai/core"><img src="https://img.shields.io/npm/v/@spectator-ai/core?label=%40spectator%2Fcore" alt="npm version"></a>
   <a href="https://github.com/ivanyou028/spectator/actions/workflows/ci.yml"><img src="https://github.com/ivanyou028/spectator/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="https://github.com/ivanyou028/spectator/blob/main/LICENSE"><img src="https://img.shields.io/github/license/ivanyou028/spectator" alt="MIT License"></a>
 </p>
@@ -20,7 +20,7 @@ Most AI story generators produce a single blob of text. Spectator treats narrati
 ## Quick Start
 
 ```bash
-npm install @spectator/core @spectator/presets @ai-sdk/anthropic
+npm install @spectator-ai/core @spectator-ai/presets @ai-sdk/anthropic
 ```
 
 ```bash
@@ -28,8 +28,8 @@ export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
 ```typescript
-import { Engine, World, Character, Plot } from '@spectator/core'
-import '@spectator/presets'
+import { Engine, World, Character, Plot } from '@spectator-ai/core'
+import '@spectator-ai/presets'
 
 const engine = new Engine({ provider: 'anthropic' })
 
@@ -59,10 +59,10 @@ console.log(story.toMarkdown())
 
 | Package | Description |
 |---------|-------------|
-| [`@spectator/core`](./packages/core) | Core narrative engine |
-| [`@spectator/presets`](./packages/presets) | Built-in worlds, plots, and archetypes |
-| [`@spectator/agent`](./packages/agent) | Agentic narrative framework with tool-using AI |
-| [`@spectator/cli`](./packages/cli) | Command-line interface |
+| [`@spectator-ai/core`](./packages/core) | Core narrative engine |
+| [`@spectator-ai/presets`](./packages/presets) | Built-in worlds, plots, and archetypes |
+| [`@spectator-ai/agent`](./packages/agent) | Agentic narrative framework with tool-using AI |
+| [`@spectator-ai/cli`](./packages/cli) | Command-line interface |
 
 ## Documentation
 

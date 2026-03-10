@@ -7,8 +7,8 @@ Token-level streaming with event handling for real-time text display.
 ## Code
 
 ```typescript
-import { Engine, Character, Plot } from '@spectator/core'
-import '@spectator/presets'
+import { Engine, Character, Plot } from '@spectator-ai/core'
+import '@spectator-ai/presets'
 
 async function main() {
   const engine = new Engine({ provider: 'anthropic' })

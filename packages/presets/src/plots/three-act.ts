@@ -1,4 +1,4 @@
-import { Plot } from '@spectator/core'
+import { Plot } from '@spectator-ai/core'
 
 Plot.registerTemplate('three-act', {
   beats: [

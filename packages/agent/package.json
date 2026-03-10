@@ -1,5 +1,5 @@
 {
-  "name": "@spectator/agent",
+  "name": "@spectator-ai/agent",
   "version": "0.1.0",
   "description": "Agentic narrative framework for Spectator",
   "type": "module",
@@ -34,7 +34,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@spectator/core": "workspace:*",
+    "@spectator-ai/core": "workspace:*",
     "ai": "^4.0.0",
     "zod": "^3.24.0"
   },

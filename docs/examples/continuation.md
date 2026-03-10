@@ -7,7 +7,7 @@ Generate a story, then continue it with new beats while preserving narrative con
 ## Code
 
 ```typescript
-import { Engine, Character } from '@spectator/core'
+import { Engine, Character } from '@spectator-ai/core'
 
 async function main() {
   const engine = new Engine({ provider: 'anthropic' })

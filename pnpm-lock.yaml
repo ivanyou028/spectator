@@ -29,7 +29,7 @@ importers:
       '@ai-sdk/openai':
         specifier: '>=1.0.0'
         version: 1.3.24(zod@3.25.76)
-      '@spectator/core':
+      '@spectator-ai/core':
         specifier: workspace:*
         version: link:../core
       ai:
@@ -51,10 +51,10 @@ importers:
 
   packages/cli:
     dependencies:
-      '@spectator/core':
+      '@spectator-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@spectator/presets':
+      '@spectator-ai/presets':
         specifier: workspace:*
         version: link:../presets
       commander:
@@ -95,7 +95,7 @@ importers:
 
   packages/presets:
     dependencies:
-      '@spectator/core':
+      '@spectator-ai/core':
         specifier: workspace:*
         version: link:../core
     devDependencies:
@@ -120,10 +120,10 @@ importers:
       '@ai-sdk/react':
         specifier: ^3.0.118
         version: 3.0.118(react@19.2.4)(zod@3.25.76)
-      '@spectator/core':
+      '@spectator-ai/core':
         specifier: workspace:*
         version: link:../core
-      '@spectator/presets':
+      '@spectator-ai/presets':
         specifier: workspace:*
         version: link:../presets
       '@xyflow/react':

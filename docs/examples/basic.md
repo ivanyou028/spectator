@@ -7,8 +7,8 @@ A simple fantasy story using presets for the world, plot, and character archetyp
 ## Code
 
 ```typescript
-import { Engine, World, Character, Plot } from '@spectator/core'
-import '@spectator/presets'
+import { Engine, World, Character, Plot } from '@spectator-ai/core'
+import '@spectator-ai/presets'
 
 const world = World.create({
   genre: 'fantasy',
@@ -45,7 +45,7 @@ console.log(story.toMarkdown())
 
 1. **World** — A custom fantasy world with a crumbling empire setting.
 2. **Characters** — Two characters: Kira (hero) and Lord Vorn (villain). Vorn has a `nemesis` relationship with Kira via `.withRelationship()`.
-3. **Plot** — The `hero-journey` template from `@spectator/presets` provides 7 beats from "The Ordinary World" to "The Return".
+3. **Plot** — The `hero-journey` template from `@spectator-ai/presets` provides 7 beats from "The Ordinary World" to "The Return".
 4. **Engine** — Uses Anthropic as the AI provider. Reads `ANTHROPIC_API_KEY` from the environment.
 5. **Output** — `story.toMarkdown()` returns the entire story as formatted markdown with scene separators.
 

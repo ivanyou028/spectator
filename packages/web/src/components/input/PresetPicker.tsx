@@ -1,4 +1,4 @@
-import { fantasyWorld, sciFiWorld, noirWorld, herosJourney, mystery, threeAct, archetypes } from '@spectator/presets'
+import { fantasyWorld, sciFiWorld, noirWorld, herosJourney, mystery, threeAct, archetypes } from '@spectator-ai/presets'
 import { usePlayground } from '../../stores/playground.js'
 
 const worldPresets = [
