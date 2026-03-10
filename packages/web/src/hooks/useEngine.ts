@@ -14,7 +14,13 @@ export function useEngine() {
 
     let languageModel: LanguageModel
     if (provider === 'anthropic') {
-      const anthropic = createAnthropic({ apiKey })
+      const anthropic = createAnthropic({ 
+        baseURL: '/api/anthropic/v1',
+        apiKey: apiKey || 'dummy-key-for-proxy', // AI SDK requires an API key, but proxy will override it
+        headers: {
+          'anthropic-dangerously-allow-browser': 'true',
+        },
+      })
       languageModel = anthropic(model || 'claude-sonnet-4-20250514')
     } else {
       const openai = createOpenAI({ apiKey })
