@@ -66,6 +66,10 @@ export class Story {
     return { ...this.data }
   }
 
+  static fromJSON(data: StoryInput): Story {
+    return new Story(data)
+  }
+
   toMarkdown(): string {
     const lines: string[] = []
 

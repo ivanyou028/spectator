@@ -128,6 +128,29 @@ describe('Story', () => {
     })
   })
 
+  describe('fromJSON()', () => {
+    it('creates a Story from plain data', () => {
+      const story = Story.fromJSON(validStory)
+      expect(story).toBeInstanceOf(Story)
+      expect(story.sceneCount).toBe(2)
+    })
+
+    it('roundtrips through toJSON/fromJSON', () => {
+      const original = new Story({
+        ...validStory,
+        title: 'My Tale',
+        world: { genre: 'fantasy' },
+        characters: [{ name: 'Kira' }],
+      })
+
+      const restored = Story.fromJSON(original.toJSON())
+      expect(restored.title).toBe('My Tale')
+      expect(restored.sceneCount).toBe(2)
+      expect(restored.world?.genre).toBe('fantasy')
+      expect(restored.characters?.[0].name).toBe('Kira')
+    })
+  })
+
   describe('immutability', () => {
     it('data is frozen', () => {
       const story = new Story(validStory)
