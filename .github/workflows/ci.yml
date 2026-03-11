@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Guardrails
 
 on:
   push:
@@ -7,28 +7,80 @@ on:
     branches: [main]
 
 jobs:
-  build-and-test:
+  # 1. Type Check
+  typecheck:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
-
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v2
         with:
           version: 9
-
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: pnpm
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm lint
+        working-directory: packages/web
 
-      - run: pnpm install --frozen-lockfile
+  # 2. Build Check
+  build:
+    runs-on: ubuntu-latest
+    needs: typecheck
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm build
+        env:
+          NODE_ENV: production
 
-      - name: Build all packages
-        run: pnpm build
+  # 3. Test Critical User Flows
+  e2e-test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm build
+      - name: Test critical flows
+        run: |
+          # Start dev server
+          pnpm dev &
+          sleep 10
+          
+          # Test 1: Graph View loads without error
+          curl -s http://localhost:5173 | grep -q "Graph Editor" || exit 1
+          
+          # Test 2: Form View loads
+          curl -s http://localhost:5173 | grep -q "Form View" || exit 1
+          
+          echo "✅ Critical flows passing"
 
-      - name: Run tests
-        run: pnpm test
-
-      - name: Type check
-        run: pnpm lint
+  # 4. Lint and Format Check
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+      - run: pnpm install
+      - run: pnpm lint

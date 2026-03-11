@@ -14,6 +14,7 @@ import {
   type NodeChange,
   type EdgeChange,
   useReactFlow,
+  ReactFlowProvider,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 
@@ -58,7 +59,7 @@ function getNextPosition(nodes: Node[], type: string): { x: number; y: number } 
   }
 }
 
-export function VisualEditor() {
+function VisualEditorInner() {
   const { state: graphState, dispatch: graphDispatch } = useGraph()
   const { state: playState, dispatch: playDispatch } = usePlayground()
   const { generate } = useEngine()
@@ -231,3 +232,10 @@ export function VisualEditor() {
   )
 }
 
+export function VisualEditor() {
+  return (
+    <ReactFlowProvider>
+      <VisualEditorInner />
+    </ReactFlowProvider>
+  )
+}
