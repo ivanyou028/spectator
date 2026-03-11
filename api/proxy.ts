@@ -1,10 +1,14 @@
 // @ts-nocheck — Vercel serverless functions have their own runtime types
+
+// Default dummy key sent by the frontend when using server-side API key
+const DUMMY_KEY = 'dummy-key-for-proxy'
+
 export default async function handler(req: any, res: any) {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, anthropic-version')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, anthropic-version, anthropic-dangerously-allow-browser')
     return res.status(204).end()
   }
 
@@ -18,8 +22,19 @@ export default async function handler(req: any, res: any) {
     'content-type': 'application/json',
   }
 
-  const apiKey = req.headers['x-api-key']
-  if (typeof apiKey === 'string') headers['x-api-key'] = apiKey
+  // Get API key from client request ONLY
+  // NOTE: Server-side API key is intentionally NOT used to prevent abuse.
+  // Users must provide their own API key in the webapp UI.
+  const clientApiKey = req.headers['x-api-key']
+
+  let apiKey: string | undefined
+  if (typeof clientApiKey === 'string' && clientApiKey !== DUMMY_KEY && clientApiKey.trim() !== '') {
+    apiKey = clientApiKey
+  } else if (typeof clientApiKey === 'string') {
+    apiKey = clientApiKey
+  }
+
+  if (apiKey) headers['x-api-key'] = apiKey
 
   const anthropicVersion = req.headers['anthropic-version']
   if (typeof anthropicVersion === 'string') headers['anthropic-version'] = anthropicVersion
@@ -34,7 +49,7 @@ export default async function handler(req: any, res: any) {
     // Set CORS headers on response
     res.setHeader('Access-Control-Allow-Origin', '*')
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, anthropic-version')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, anthropic-version, anthropic-dangerously-allow-browser')
 
     const contentType = response.headers.get('content-type') || ''
     res.setHeader('Content-Type', contentType)
@@ -59,6 +74,8 @@ export default async function handler(req: any, res: any) {
     }
   } catch (error) {
     res.setHeader('Access-Control-Allow-Origin', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-api-key, anthropic-version, anthropic-dangerously-allow-browser')
     return res.status(500).json({ error: 'Proxy error', message: String(error) })
   }
 }

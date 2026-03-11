@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { usePlayground } from '../../stores/playground.js'
 import { NarrativeMemoryPanel } from './NarrativeMemoryPanel.js'
 import { SceneCard } from './SceneCard.js'
@@ -5,6 +6,7 @@ import { StreamingText } from './StreamingText.js'
 
 export function StoryOutput() {
   const { state } = usePlayground()
+  const outputRef = useRef<HTMLDivElement>(null)
 
   const getStatusText = () => {
     if (!state.draftText && !state.critiqueText) return 'Drafting scene...'
@@ -12,14 +14,40 @@ export function StoryOutput() {
     return 'Writing final revision'
   }
 
+  // Auto-scroll to output when generation starts
+  useEffect(() => {
+    if (state.streamingScene && outputRef.current) {
+      outputRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [state.streamingScene])
+
+  // If no scenes and not streaming, show nothing
+  if (state.scenes.length === 0 && !state.streamingScene) {
+    return null
+  }
+
   return (
-    <div className="flex flex-col gap-4">
+    <div ref={outputRef} className="flex flex-col gap-4">
+      {/* Section Header */}
+      <div className="flex items-center gap-2 border-b border-zinc-700 pb-2 mb-2">
+        <span className="text-lg">📖</span>
+        <h2 className="text-lg font-semibold text-zinc-100">Generated Story</h2>
+        {state.status === 'streaming' && (
+          <span className="ml-auto inline-flex items-center gap-1.5 text-xs text-indigo-400">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-400" />
+            Writing...
+          </span>
+        )}
+      </div>
+
+      {/* Completed Scenes */}
       {state.scenes.map((scene) => (
         <SceneCard key={scene.sceneIndex} scene={scene} />
       ))}
 
+      {/* Currently Streaming Scene */}
       {state.streamingScene && (
-        <div className="rounded-lg border border-indigo-500/30 bg-zinc-900/50 p-4">
+        <div className="rounded-lg border-2 border-indigo-500/50 bg-zinc-900/80 p-4 shadow-lg shadow-indigo-500/10">
           <div className="mb-3 flex flex-col gap-2 border-b border-indigo-500/20 pb-3">
             <div className="flex items-center gap-2">
               <span className="text-xs font-medium text-zinc-500">

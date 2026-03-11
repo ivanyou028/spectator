@@ -1,11 +1,12 @@
 import { Handle, Position, type NodeProps } from '@xyflow/react'
-import { memo } from 'react'
+import { memo, useRef, useEffect } from 'react'
 import { useGraph } from '../../../stores/graph.js'
 
-export const BeatNode = memo(({ id, data }: NodeProps) => {
+export const BeatNode = memo(({ id, data, selected }: NodeProps) => {
   const { dispatch } = useGraph()
+  const descriptionRef = useRef<HTMLTextAreaElement>(null)
 
-  const onChange = (field: string) => (evt: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const onChange = (field: string) => (evt: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     dispatch({
       type: 'UPDATE_NODE_DATA',
       id,
@@ -13,8 +14,26 @@ export const BeatNode = memo(({ id, data }: NodeProps) => {
     })
   }
 
+  // Auto-resize textarea based on content
+  const autoResize = (ref: React.RefObject<HTMLTextAreaElement | null>) => {
+    if (ref.current) {
+      ref.current.style.height = 'auto'
+      ref.current.style.height = `${Math.max(40, ref.current.scrollHeight)}px`
+    }
+  }
+
+  const descriptionValue = (data.description as string) || ''
+
+  useEffect(() => {
+    autoResize(descriptionRef)
+  }, [descriptionValue])
+
   return (
-    <div className="bg-rose-950/80 border border-rose-500/30 rounded-lg shadow-xl overflow-hidden w-64 backdrop-blur-md">
+    <div className={`bg-rose-950/80 border rounded-lg shadow-xl overflow-hidden w-72 backdrop-blur-md transition-all duration-200 ${
+      selected 
+        ? 'border-rose-400 ring-2 ring-rose-400/50 shadow-rose-500/20 z-50' 
+        : 'border-rose-500/30'
+    }`}>
       <Handle
         type="target"
         position={Position.Left}
@@ -31,7 +50,7 @@ export const BeatNode = memo(({ id, data }: NodeProps) => {
         <label className="flex flex-col gap-1 text-xs text-rose-200/70">
           Name
           <input
-            className="nodrag bg-black/40 border border-rose-500/20 rounded px-2 py-1 text-sm text-rose-50 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
+            className="nodrag bg-black/40 border border-rose-500/20 rounded px-2 py-1.5 text-sm text-rose-50 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
             value={(data.name as string) || ''}
             onChange={onChange('name')}
             placeholder="Beat Name"
@@ -41,7 +60,7 @@ export const BeatNode = memo(({ id, data }: NodeProps) => {
         <label className="flex flex-col gap-1 text-xs text-rose-200/70">
           Type
           <select
-            className="nodrag bg-black/40 border border-rose-500/20 rounded px-2 py-1 text-sm text-rose-50 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
+            className="nodrag bg-black/40 border border-rose-500/20 rounded px-2 py-1.5 text-sm text-rose-50 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
             value={(data.type as string) || ''}
             onChange={onChange('type')}
           >
@@ -58,12 +77,17 @@ export const BeatNode = memo(({ id, data }: NodeProps) => {
         </label>
 
         <label className="flex flex-col gap-1 text-xs text-rose-200/70">
-          Description
-          <input
-            className="nodrag bg-black/40 border border-rose-500/20 rounded px-2 py-1 text-sm text-rose-50 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400"
-            value={(data.description as string) || ''}
-            onChange={onChange('description')}
-            placeholder="What happens?"
+          <span>Description</span>
+          <textarea
+            ref={descriptionRef}
+            className="nodrag bg-black/40 border border-rose-500/20 rounded px-2 py-1.5 text-sm text-rose-50 focus:outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-400 resize-none min-h-[40px] overflow-hidden"
+            value={descriptionValue}
+            onChange={(e) => {
+              onChange('description')(e)
+              autoResize(descriptionRef)
+            }}
+            placeholder="What happens in this beat?"
+            rows={1}
           />
         </label>
       </div>

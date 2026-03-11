@@ -12,6 +12,7 @@ import {
 import { Header } from './components/layout/Header.js'
 import { Sidebar } from './components/layout/Sidebar.js'
 import { MainPanel } from './components/layout/MainPanel.js'
+import { OnboardingBanner } from './components/onboarding/OnboardingBanner.js'
 import { PersistenceProvider } from './hooks/usePersistence.js'
 
 export default function App() {
@@ -43,6 +44,7 @@ export default function App() {
         <PersistenceProvider>
           <div className="flex h-screen flex-col bg-zinc-950 text-zinc-100">
             <Header />
+            <OnboardingBanner hasApiKey={playState.engineConfig.apiKey.length > 0} />
             <div className="flex min-h-0 flex-1">
               {playState.viewMode === 'form' && <Sidebar />}
               <MainPanel />

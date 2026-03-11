@@ -6,9 +6,32 @@ import { useGraph } from '../stores/graph.js'
 import { usePlayground } from '../stores/playground.js'
 import type { Node, Edge } from '@xyflow/react'
 
+// Grid-based positioning to avoid overlaps (must match VisualEditor.tsx)
+const GRID_COL_WIDTH = 320
+const GRID_ROW_HEIGHT = 280
+const GRID_COLS = 3
+
+function getNextPosition(nodes: Node[], type: string): { x: number; y: number } {
+  // Group nodes by type to organize them in sections
+  const typeIndex = nodes.filter(n => n.type === type).length
+  const totalNodes = nodes.length
+  
+  // Calculate grid position
+  const col = totalNodes % GRID_COLS
+  const row = Math.floor(totalNodes / GRID_COLS)
+  
+  // Add some jitter based on type to prevent perfect alignment
+  const typeOffset = type === 'world' ? 0 : type === 'character' ? 20 : 40
+  
+  return {
+    x: col * GRID_COL_WIDTH + 100 + typeOffset,
+    y: row * GRID_ROW_HEIGHT + 80 + (typeIndex * 10),
+  }
+}
+
 export function useCoPilot() {
   const { state: playState } = usePlayground()
-  const { dispatch: graphDispatch } = useGraph()
+  const { dispatch: graphDispatch, state: graphState } = useGraph()
 
   const [messages, setMessages] = useState<CoreMessage[]>([])
   const [input, setInput] = useState('')
@@ -76,10 +99,12 @@ If the user asks you to connect things, use the connect_nodes tool.`,
             }),
             execute: async ({ genre, setting, tone }) => {
               const id = `world-${Date.now()}`
+              // Use grid-based positioning to avoid overlaps
+              const position = getNextPosition(graphState.nodes, 'world')
               const newNode: Node = {
                 id,
                 type: 'world',
-                position: { x: 50, y: 50 },
+                position,
                 data: { genre, setting, tone },
               }
               graphDispatch({ type: 'ADD_NODE', payload: newNode })
@@ -95,10 +120,12 @@ If the user asks you to connect things, use the connect_nodes tool.`,
             }),
             execute: async ({ name, traits, goals }) => {
               const id = `char-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+              // Use grid-based positioning to avoid overlaps
+              const position = getNextPosition(graphState.nodes, 'character')
               const newNode: Node = {
                 id,
                 type: 'character',
-                position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+                position,
                 data: { name, traits, goals },
               }
               graphDispatch({ type: 'ADD_NODE', payload: newNode })
@@ -117,10 +144,12 @@ If the user asks you to connect things, use the connect_nodes tool.`,
             }),
             execute: async ({ name, type, description }) => {
               const id = `beat-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
+              // Use grid-based positioning to avoid overlaps
+              const position = getNextPosition(graphState.nodes, 'beat')
               const newNode: Node = {
                 id,
                 type: 'beat',
-                position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 300 },
+                position,
                 data: { name, type, description },
               }
               graphDispatch({ type: 'ADD_NODE', payload: newNode })
@@ -208,7 +237,7 @@ If the user asks you to connect things, use the connect_nodes tool.`,
         setIsLoading(false)
       }
     }
-  }, [messages, isLoading, model, graphDispatch])
+  }, [messages, isLoading, model, graphDispatch, graphState])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

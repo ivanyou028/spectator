@@ -3,10 +3,12 @@ import { CharacterStatePanel } from '../output/CharacterStatePanel.js'
 import { ContinuePanel } from '../actions/ContinuePanel.js'
 import { usePlayground } from '../../stores/playground.js'
 import { VisualEditor } from '../graph/VisualEditor.js'
+import { ErrorState } from '../shared/ErrorState.js'
 
 export function MainPanel() {
   const { state } = usePlayground()
   const hasOutput = state.scenes.length > 0 || state.streamingScene !== null
+  const isGenerating = state.status === 'streaming'
 
   return (
     <main className={`flex flex-1 flex-col ${state.viewMode === 'form' ? 'overflow-y-auto p-6 flex-1' : 'w-full h-full p-0'} bg-zinc-900`}>
@@ -14,7 +16,7 @@ export function MainPanel() {
         <VisualEditor />
       ) : (
         <>
-          {!hasOutput && state.status !== 'streaming' ? (
+          {!hasOutput && !isGenerating ? (
             <div className="flex flex-1 items-center justify-center">
               <div className="text-center">
                 <p className="text-lg text-zinc-500">Describe your story and hit Generate</p>
@@ -25,10 +27,25 @@ export function MainPanel() {
             </div>
           ) : (
             <div className="flex flex-col gap-6">
-              {state.error && (
-                <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-                  {state.error}
+              {/* Generation Status Banner */}
+              {isGenerating && (
+                <div className="rounded-lg border border-indigo-500/30 bg-indigo-500/10 px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <span className="h-4 w-4 border-2 border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-indigo-300">
+                        {state.streamingScene ? `Writing Scene ${state.streamingScene.sceneIndex + 1}...` : 'Preparing story...'}
+                      </p>
+                      <p className="text-xs text-indigo-400/70 mt-0.5">
+                        The AI is crafting your narrative. Watch it appear below in real-time.
+                      </p>
+                    </div>
+                  </div>
                 </div>
+              )}
+
+              {state.error && (
+                <ErrorState error={state.error} />
               )}
               <StoryOutput />
               {state.scenes.some((s) => s.characterStates && s.characterStates.length > 0) && (
@@ -38,8 +55,8 @@ export function MainPanel() {
             </div>
           )}
           {!hasOutput && state.error && (
-            <div className="mt-4 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {state.error}
+            <div className="mt-4">
+              <ErrorState error={state.error} />
             </div>
           )}
         </>

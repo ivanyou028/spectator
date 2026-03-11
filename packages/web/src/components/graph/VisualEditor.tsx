@@ -35,11 +35,35 @@ const NODE_TYPES = {
 // Ensure unique IDs
 let idCounter = 1
 
+// Grid-based positioning to avoid overlaps
+const GRID_COL_WIDTH = 320
+const GRID_ROW_HEIGHT = 280
+const GRID_COLS = 3
+
+function getNextPosition(nodes: Node[], type: string): { x: number; y: number } {
+  // Group nodes by type to organize them in sections
+  const typeIndex = nodes.filter(n => n.type === type).length
+  const totalNodes = nodes.length
+  
+  // Calculate grid position
+  const col = totalNodes % GRID_COLS
+  const row = Math.floor(totalNodes / GRID_COLS)
+  
+  // Add some jitter based on type to prevent perfect alignment
+  const typeOffset = type === 'world' ? 0 : type === 'character' ? 20 : 40
+  
+  return {
+    x: col * GRID_COL_WIDTH + 100 + typeOffset,
+    y: row * GRID_ROW_HEIGHT + 80 + (typeIndex * 10),
+  }
+}
+
 export function VisualEditor() {
   const { state: graphState, dispatch: graphDispatch } = useGraph()
   const { state: playState, dispatch: playDispatch } = usePlayground()
   const { generate } = useEngine()
   const [isGenerating, setIsGenerating] = useState(false)
+  const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
 
   // Start continuous bi-directional syncing loop between stores
   useBiDirectionalSync()
@@ -58,13 +82,24 @@ export function VisualEditor() {
     [graphDispatch]
   )
 
+  const onNodeClick = useCallback((_: React.MouseEvent, node: Node) => {
+    setSelectedNodeId(node.id)
+  }, [])
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNodeId(null)
+  }, [])
+
   const addNode = (type: string) => {
+    const position = getNextPosition(graphState.nodes, type)
     const newNode: Node = {
       id: `${type}-${idCounter++}`,
       type,
-      position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+      position,
       data: {},
+      selected: true,
     }
+    setSelectedNodeId(newNode.id)
     graphDispatch({ type: 'SET_NODES', payload: [...graphState.nodes, newNode] })
   }
 
@@ -103,11 +138,16 @@ export function VisualEditor() {
   return (
     <div className="flex-1 h-full w-full bg-slate-950 relative">
       <ReactFlow
-        nodes={graphState.nodes}
+        nodes={graphState.nodes.map(node => ({
+          ...node,
+          selected: node.id === selectedNodeId
+        }))}
         edges={graphState.edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
         nodeTypes={NODE_TYPES}
         fitView
         className="bg-slate-950"

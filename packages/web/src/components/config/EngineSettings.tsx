@@ -10,6 +10,10 @@ export function EngineSettings() {
     'spectator-provider',
     'anthropic'
   )
+  const [shouldExpandSettings, setShouldExpandSettings] = useLocalStorage(
+    'spectator-settings-should-expand',
+    false
+  )
 
   // Sync localStorage values on mount
   useEffect(() => {
@@ -18,6 +22,14 @@ export function EngineSettings() {
     }
   }, [state.engineConfig.apiKey, savedKey, savedProvider, dispatch])
 
+  // Handle auto-expand from banner/error state clicks
+  useEffect(() => {
+    if (shouldExpandSettings) {
+      setOpen(true)
+      setShouldExpandSettings(false)
+    }
+  }, [shouldExpandSettings, setShouldExpandSettings])
+
   function updateConfig(payload: Partial<typeof state.engineConfig>) {
     dispatch({ type: 'SET_ENGINE_CONFIG', payload })
     if (payload.apiKey !== undefined) setSavedKey(payload.apiKey)
@@ -25,7 +37,7 @@ export function EngineSettings() {
   }
 
   return (
-    <section className="rounded-lg border border-zinc-800 bg-zinc-900/50">
+    <section data-engine-settings className="rounded-lg border border-zinc-800 bg-zinc-900/50">
       <button
         type="button"
         onClick={() => setOpen(!open)}
@@ -63,6 +75,7 @@ export function EngineSettings() {
           <label className="flex flex-col gap-1">
             <span className="text-xs text-zinc-400">API Key</span>
             <input
+              data-api-key-input
               type="password"
               value={state.engineConfig.apiKey}
               onChange={(e) => updateConfig({ apiKey: e.target.value })}

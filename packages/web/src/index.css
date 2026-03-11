@@ -1,1 +1,50 @@
 @import "tailwindcss";
+
+/* React Flow custom styles */
+.react-flow__node {
+  transition: box-shadow 0.2s ease;
+}
+
+.react-flow__node.selected {
+  z-index: 100 !important;
+}
+
+/* Smooth node selection transitions */
+.react-flow__node > div {
+  transition: all 0.2s ease;
+}
+
+/* Ensure textareas in nodes auto-resize properly */
+.react-flow__node textarea {
+  min-height: 2.5rem;
+  field-sizing: content;
+}
+
+/* Hide scrollbar for textareas in nodes */
+.react-flow__node textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.react-flow__node textarea {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Custom scrollbar for the story output */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(39, 39, 42, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(82, 82, 91, 0.8);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(113, 113, 122, 0.8);
+}
