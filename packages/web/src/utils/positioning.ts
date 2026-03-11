@@ -27,14 +27,13 @@ export function getNextPosition(
   nodes: Node[],
   type: string
 ): { x: number; y: number } {
-  const typeIndex = nodes.filter((n) => n.type === type).length
   const typeOffset = TYPE_OFFSETS[type] ?? 0
 
   // Search for non-overlapping position
   for (let row = 0; row < 20; row++) {
     for (let col = 0; col < GRID_COLS; col++) {
       const x = col * GRID_COL_WIDTH + 100 + typeOffset
-      const y = row * GRID_ROW_HEIGHT + 80 + typeIndex * 20
+      const y = row * GRID_ROW_HEIGHT + 80
 
       // Check collision with existing nodes
       const overlaps = nodes.some((node) => {
