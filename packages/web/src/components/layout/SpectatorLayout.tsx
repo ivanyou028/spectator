@@ -6,6 +6,7 @@ import { Header } from './Header.js'
 import { LandingChat } from '../chat/LandingChat.js'
 import { ChatSidebar } from '../chat/ChatSidebar.js'
 import { VisualEditor } from '../graph/VisualEditor.js'
+import { RelationshipsView } from '../relationships/RelationshipsView.js'
 
 export function SpectatorLayout() {
   const { state: playState } = usePlayground()
@@ -29,7 +30,7 @@ export function SpectatorLayout() {
           <>
             <ChatSidebar {...coPilot} />
             <main className="relative flex flex-1 flex-col overflow-hidden bg-zinc-900 border-l border-zinc-800">
-               <VisualEditor />
+               {playState.viewMode === 'relationships' ? <RelationshipsView /> : <VisualEditor />}
             </main>
           </>
         )}

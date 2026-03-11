@@ -21,6 +21,7 @@ export function Header() {
               </span>
             )}
           </h1>
+        </div>
         <div className="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
           <button
             onClick={() => playDispatch({ type: 'SET_VIEW_MODE', payload: 'graph' })}
