@@ -3,6 +3,7 @@ import { CharacterStatePanel } from '../output/CharacterStatePanel.js'
 import { ContinuePanel } from '../actions/ContinuePanel.js'
 import { usePlayground } from '../../stores/playground.js'
 import { VisualEditor } from '../graph/VisualEditor.js'
+import { RelationshipsView } from '../relationships/RelationshipsView.js'
 import { ErrorState } from '../shared/ErrorState.js'
 import { useBiDirectionalSync } from '../../hooks/useBiDirectionalSync.js'
 import { ReactFlowProvider } from '@xyflow/react'
@@ -20,6 +21,8 @@ export function MainPanel() {
         <ReactFlowProvider>
           <VisualEditor />
         </ReactFlowProvider>
+      ) : state.viewMode === 'relationships' ? (
+        <RelationshipsView />
       ) : (
         <>
           {!hasOutput && !isGenerating ? (

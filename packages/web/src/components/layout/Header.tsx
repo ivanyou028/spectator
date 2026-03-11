@@ -1,3 +1,4 @@
+import { Users } from 'lucide-react'
 import { usePlayground } from '../../stores/playground.js'
 import { ExportMenu } from '../actions/ExportMenu.js'
 
@@ -38,6 +39,16 @@ export function Header() {
             }`}
           >
             <span className="text-indigo-400">⬡</span> Graph Editor
+          </button>
+          <button
+            onClick={() => dispatch({ type: 'SET_VIEW_MODE', payload: 'relationships' })}
+            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+              state.viewMode === 'relationships'
+                ? 'bg-zinc-800 text-zinc-100 shadow-sm'
+                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+            }`}
+          >
+            <Users size={12} className="text-indigo-400" /> Relationships
           </button>
         </div>
       </div>

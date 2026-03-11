@@ -45,7 +45,7 @@ export interface PlaygroundState {
   narrativeMemory: NarrativeMemoryData | null
   continuationBeats: BeatInput[]
   continuationInstructions: string
-  viewMode: 'form' | 'graph'
+  viewMode: 'form' | 'graph' | 'relationships'
   draftText: string | null
   critiqueText: string | null
 }
@@ -70,7 +70,7 @@ export type PlaygroundAction =
   | { type: 'RESET_OUTPUT' }
   | { type: 'SET_CONTINUATION_BEATS'; payload: BeatInput[] }
   | { type: 'SET_CONTINUATION_INSTRUCTIONS'; payload: string }
-  | { type: 'SET_VIEW_MODE'; payload: 'form' | 'graph' }
+  | { type: 'SET_VIEW_MODE'; payload: 'form' | 'graph' | 'relationships' }
   | { type: 'DRAFT_COMPLETE'; text: string }
   | { type: 'CRITIQUE_COMPLETE'; text: string }
   | { type: 'HYDRATE_STATE'; payload: Partial<PlaygroundState> }
