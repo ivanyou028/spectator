@@ -4,7 +4,7 @@ import { ExportMenu } from '../actions/ExportMenu.js'
 import { Settings, Users } from 'lucide-react'
 import { SettingsModal } from '../config/SettingsModal.js'
 
-export function Header() {
+export function Header({ showViewToggle = true }: { showViewToggle?: boolean }) {
   const { state, dispatch: playDispatch } = usePlayground()
   const [showSettings, setShowSettings] = useState(false)
 
@@ -22,28 +22,30 @@ export function Header() {
             )}
           </h1>
         </div>
-        <div className="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
-          <button
-            onClick={() => playDispatch({ type: 'SET_VIEW_MODE', payload: 'graph' })}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-              state.viewMode === 'graph' || state.viewMode === 'form'
-                ? 'bg-zinc-800 text-zinc-100 shadow-sm' 
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <span className="text-indigo-400">⬡</span> Graph Editor
-          </button>
-          <button
-            onClick={() => playDispatch({ type: 'SET_VIEW_MODE', payload: 'relationships' })}
-            className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
-              state.viewMode === 'relationships'
-                ? 'bg-zinc-800 text-zinc-100 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
-            }`}
-          >
-            <Users size={12} className="text-indigo-400" /> Relationships
-          </button>
-        </div>
+        {showViewToggle && (
+          <div className="flex bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+            <button
+              onClick={() => playDispatch({ type: 'SET_VIEW_MODE', payload: 'graph' })}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                state.viewMode === 'graph' || state.viewMode === 'form'
+                  ? 'bg-zinc-800 text-zinc-100 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <span className="text-indigo-400">⬡</span> Graph Editor
+            </button>
+            <button
+              onClick={() => playDispatch({ type: 'SET_VIEW_MODE', payload: 'relationships' })}
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors flex items-center gap-1.5 ${
+                state.viewMode === 'relationships'
+                  ? 'bg-zinc-800 text-zinc-100 shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+              }`}
+            >
+              <Users size={12} className="text-indigo-400" /> Relationships
+            </button>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <button
             onClick={() => setShowSettings(true)}

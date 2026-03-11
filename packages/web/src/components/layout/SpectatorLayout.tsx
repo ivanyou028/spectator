@@ -21,7 +21,7 @@ export function SpectatorLayout() {
   return (
     <div className="flex h-screen flex-col bg-zinc-950 text-zinc-100">
       {!hasApiKey && <ApiKeyModal />}
-      <Header />
+      <Header showViewToggle={!showLanding} />
       
       <div className="flex min-h-0 flex-1">
         {showLanding ? (
