@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useGraph } from '../stores/graph.js'
 import { usePlayground } from '../stores/playground.js'
 import { compileGraph } from '../utils/graph-compiler.js'
+import { getNextPosition } from '../utils/positioning.js'
 import type { Node } from '@xyflow/react'
 
 /**
@@ -61,7 +62,7 @@ export function useBiDirectionalSync() {
         nextNodes.push({
           id: playState.world.id || `world-${Date.now()}`,
           type: 'world',
-          position: { x: 50, y: 50 },
+          position: getNextPosition(nextNodes, 'world'),
           data: { ...playState.world }
         })
       }
@@ -92,7 +93,7 @@ export function useBiDirectionalSync() {
         nextNodes.push({
           id: char.id,
           type: 'character',
-          position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 100 },
+          position: getNextPosition(nextNodes, 'character'),
           data: { name: char.name, traits: char.traits?.join(', '), goals: char.goals?.join(', ') }
         })
       }
@@ -121,7 +122,7 @@ export function useBiDirectionalSync() {
         nextNodes.push({
           id: beat.id,
           type: 'beat',
-          position: { x: Math.random() * 200 + 100, y: Math.random() * 200 + 300 },
+          position: getNextPosition(nextNodes, 'beat'),
           data: { name: beat.name, type: beat.type, description: beat.description }
         })
       }
