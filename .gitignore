@@ -9,3 +9,4 @@ dist/
 docs/.vitepress/dist/
 docs/.vitepress/cache/
 .vercel
+venv-gif/
