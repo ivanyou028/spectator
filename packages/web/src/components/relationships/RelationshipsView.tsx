@@ -12,6 +12,7 @@ import {
 import '@xyflow/react/dist/style.css'
 
 import { usePlayground, type SceneDisplayData } from '../../stores/playground.js'
+import { useGraph } from '../../stores/graph.js'
 import { RelationshipCharacterNode } from './RelationshipCharacterNode.js'
 import { RelationshipEdge, getSentimentColor } from './RelationshipEdge.js'
 import type { CharacterInput, NarrativeMemoryData } from '@spectator-ai/core'
@@ -151,17 +152,35 @@ const LEGEND = [
 ]
 
 function RelationshipsViewInner() {
-  const { state } = usePlayground()
-  const { characters, scenes, narrativeMemory } = state
+  const { state: playState } = usePlayground()
+  const { state: graphState } = useGraph()
+  const { scenes, narrativeMemory } = playState
 
-  const nodes = useMemo(() => computeCircularLayout(characters), [characters])
+  const mergedCharacters = useMemo(() => {
+    const playChars = playState.characters.filter(c => c.name.trim() !== '')
+    const graphChars = graphState.nodes
+      .filter((n: Node) => n.type === 'character')
+      .map((n: Node) => ({
+        name: (n.data.name as string) || 'Unnamed',
+        traits: (n.data.traits as string) || undefined,
+        goals: (n.data.goals as string) || undefined,
+      }))
+    
+    // Deduplicate by name
+    const combined = [...playChars, ...graphChars]
+    const map = new Map()
+    combined.forEach(c => map.set(c.name, c))
+    return Array.from(map.values()) as typeof playState.characters
+  }, [playState.characters, graphState.nodes])
+
+  const nodes = useMemo(() => computeCircularLayout(mergedCharacters), [mergedCharacters])
   const relationships = useMemo(
-    () => buildRelationships(characters, scenes, narrativeMemory),
-    [characters, scenes, narrativeMemory]
+    () => buildRelationships(mergedCharacters, scenes, narrativeMemory),
+    [mergedCharacters, scenes, narrativeMemory]
   )
   const edges = useMemo(() => buildEdges(relationships), [relationships])
 
-  if (characters.length === 0) {
+  if (mergedCharacters.length === 0) {
     return (
       <div className="flex-1 h-full flex items-center justify-center bg-slate-950">
         <div className="text-center">
@@ -209,7 +228,7 @@ function RelationshipsViewInner() {
               </div>
             ))}
           </div>
-          {edges.length === 0 && characters.length > 0 && (
+          {edges.length === 0 && mergedCharacters.length > 0 && (
             <p className="mt-2 text-[10px] text-zinc-500 max-w-[140px] leading-relaxed">
               No relationships defined. Add relationships to characters or generate a story.
             </p>

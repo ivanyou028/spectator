@@ -38,7 +38,7 @@ describe('Positioning Utilities', () => {
       expect(isOverlapping).toBe(false)
     })
     
-    it('correctly discovers grid slots for continuous node additions', () => {
+    it('correctly places nodes horizontally for continuous additions', () => {
       const nodes: Node[] = []
       
       // Spawn 10 nodes sequentially

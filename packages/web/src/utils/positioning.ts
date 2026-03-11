@@ -27,31 +27,16 @@ export function getNextPosition(
   nodes: Node[],
   type: string
 ): { x: number; y: number } {
-  const typeOffset = TYPE_OFFSETS[type] ?? 0
-
-  // Search for non-overlapping position
-  for (let row = 0; row < 20; row++) {
-    for (let col = 0; col < GRID_COLS; col++) {
-      const x = col * GRID_COL_WIDTH + 100 + typeOffset
-      const y = row * GRID_ROW_HEIGHT + 80
-
-      // Check collision with existing nodes
-      const overlaps = nodes.some((node) => {
-        const dx = Math.abs(node.position.x - x)
-        const dy = Math.abs(node.position.y - y)
-        return dx < NODE_WIDTH && dy < NODE_HEIGHT
-      })
-
-      if (!overlaps) {
-        return { x, y }
-      }
-    }
+  if (nodes.length === 0) {
+    return { x: 100, y: 100 }
   }
 
-  // Fallback: expand beyond grid with small jitter
+  // Find the rightmost node's position
+  const maxX = Math.max(...nodes.map(n => n.position.x))
+
   return {
-    x: 100 + Math.random() * 200,
-    y: 100 + Math.random() * 200,
+    x: maxX + NODE_WIDTH + 50, // 50px gap between nodes
+    y: 100 // Keep them on a single horizontal track
   }
 }
 

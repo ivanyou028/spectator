@@ -3,8 +3,11 @@ import { memo } from 'react'
 
 export const RelationshipCharacterNode = memo(({ data }: NodeProps) => {
   const name = data.name as string
-  const traits = data.traits as string[] | undefined
-  const initial = name ? name[0].toUpperCase() : '?'
+  const rawTraits = data.traits as string | string[] | undefined
+  const traits = Array.isArray(rawTraits) 
+    ? rawTraits 
+    : (typeof rawTraits === 'string' ? rawTraits.split(',').map(t => t.trim()).filter(Boolean) : undefined)
+  const initial = name && name.length > 0 ? name[0].toUpperCase() : '?'
 
   return (
     <div className="flex flex-col items-center relative">
