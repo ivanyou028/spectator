@@ -4,11 +4,14 @@ import { ContinuePanel } from '../actions/ContinuePanel.js'
 import { usePlayground } from '../../stores/playground.js'
 import { VisualEditor } from '../graph/VisualEditor.js'
 import { ErrorState } from '../shared/ErrorState.js'
+import { useBiDirectionalSync } from '../../hooks/useBiDirectionalSync.js'
 
 export function MainPanel() {
   const { state } = usePlayground()
   const hasOutput = state.scenes.length > 0 || state.streamingScene !== null
   const isGenerating = state.status === 'streaming'
+
+  useBiDirectionalSync()
 
   return (
     <main className={`flex flex-1 flex-col ${state.viewMode === 'form' ? 'overflow-y-auto p-6 flex-1' : 'w-full h-full p-0'} bg-zinc-900`}>

@@ -76,6 +76,18 @@ export function compileGraph(nodes: Node[], edges: Edge[]): CompiledGraph {
       }
     }
 
+    // Append any leftover floating beats that were not connected to a sequence
+    for (const beatNode of beatNodes) {
+        if (!visited.has(beatNode.id)) {
+            compiledBeats.push({
+                id: beatNode.id,
+                name: (beatNode.data.name as string) || 'Unnamed Beat',
+                type: (beatNode.data.type as any) || 'setup',
+                description: beatNode.data.description as string,
+            })
+        }
+    }
+
     plot = { beats: compiledBeats }
   }
 

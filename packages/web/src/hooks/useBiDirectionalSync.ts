@@ -133,10 +133,34 @@ export function useBiDirectionalSync() {
       return beatIdsInForm.has(n.id)
     })
 
+    // c. Regenerate straight-line edges for Beats from Form view
+    // First, remove all existing beat->beat edges
+    let nextEdges = graphState.edges.filter(e => {
+        const sourceNode = nextNodes.find(n => n.id === e.source)
+        const targetNode = nextNodes.find(n => n.id === e.target)
+        if (sourceNode?.type === 'beat' && targetNode?.type === 'beat') return false
+        return true
+    })
+    
+    // Then redraw edges in exact straight-line sequence based on Form order
+    const orderedBeats = playState.plot?.beats || []
+    for (let i = 0; i < orderedBeats.length - 1; i++) {
+        const currentBeat = orderedBeats[i]
+        const nextBeat = orderedBeats[i + 1]
+        if (currentBeat.id && nextBeat.id) {
+           nextEdges.push({
+               id: `e-${currentBeat.id}-${nextBeat.id}`,
+               source: currentBeat.id,
+               target: nextBeat.id
+           })
+        }
+    }
+
+
     // Compare strictly by node data, ignoring viewport layout dragging to avoid cyclical loops
-    const nextGraphStr = JSON.stringify({ nodes: nextNodes, edges: graphState.edges })
+    const nextGraphStr = JSON.stringify({ nodes: nextNodes, edges: nextEdges })
     if (nextGraphStr !== lastGraphStr.current) {
-       graphDispatch({ type: 'SET_NODES', payload: nextNodes })
+       graphDispatch({ type: 'HYDRATE_STATE', payload: { nodes: nextNodes, edges: nextEdges } })
        
        lastPlayStr.current = currentPlayStr
        lastGraphStr.current = nextGraphStr
