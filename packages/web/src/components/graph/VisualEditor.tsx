@@ -37,25 +37,44 @@ const NODE_TYPES = {
 let idCounter = 1
 
 // Grid-based positioning to avoid overlaps
-const GRID_COL_WIDTH = 320
-const GRID_ROW_HEIGHT = 280
-const GRID_COLS = 3
+const COL_WIDTH = 400
+const ROW_HEIGHT = 350
+const COLS = 3
+
+// Approximate node dimensions for collision detection
+const NODE_WIDTH = 300
+const NODE_HEIGHT = 320
 
 function getNextPosition(nodes: Node[], type: string): { x: number; y: number } {
-  // Group nodes by type to organize them in sections
-  const typeIndex = nodes.filter(n => n.type === type).length
-  const totalNodes = nodes.length
-  
-  // Calculate grid position
-  const col = totalNodes % GRID_COLS
-  const row = Math.floor(totalNodes / GRID_COLS)
-  
-  // Add some jitter based on type to prevent perfect alignment
-  const typeOffset = type === 'world' ? 0 : type === 'character' ? 20 : 40
-  
+  // Type-based column offset for grouping (0, 1, 2 for world, character, beat)
+  const typeOrder = ['world', 'character', 'beat']
+  const typeColOffset = typeOrder.indexOf(type) * 40
+
+  // Find next available position with collision detection
+  for (let row = 0; row < 20; row++) {
+    for (let col = 0; col < COLS; col++) {
+      const x = col * COL_WIDTH + 100 + typeColOffset
+      const y = row * ROW_HEIGHT + 80
+
+      // Check if this position overlaps any existing node
+      const overlaps = nodes.some(node => {
+        const dx = Math.abs(node.position.x - x)
+        const dy = Math.abs(node.position.y - y)
+        return dx < NODE_WIDTH && dy < NODE_HEIGHT
+      })
+
+      if (!overlaps) {
+        return { x, y }
+      }
+    }
+  }
+
+  // Fallback: expand beyond grid with random offset
+  const fallbackRow = Math.floor(nodes.length / COLS) + 1
+  const fallbackCol = nodes.length % COLS
   return {
-    x: col * GRID_COL_WIDTH + 100 + typeOffset,
-    y: row * GRID_ROW_HEIGHT + 80 + (typeIndex * 10),
+    x: fallbackCol * COL_WIDTH + 100 + typeColOffset + Math.random() * 50,
+    y: fallbackRow * ROW_HEIGHT + 80 + Math.random() * 50,
   }
 }
 
