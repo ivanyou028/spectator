@@ -5,6 +5,64 @@ import { z } from 'zod'
 import { useGraph } from '../stores/graph.js'
 import { usePlayground } from '../stores/playground.js'
 import type { Node, Edge } from '@xyflow/react'
+import type { GraphState } from '../stores/graph.js'
+
+// Helper to format graph state for context
+function formatGraphContext(state: GraphState): string {
+  const worlds = state.nodes.filter((n: Node) => n.type === 'world')
+  const characters = state.nodes.filter((n: Node) => n.type === 'character')
+  const beats = state.nodes.filter((n: Node) => n.type === 'beat')
+  
+  let context = '\n=== CURRENT CANVAS STATE ===\n'
+  
+  if (worlds.length > 0) {
+    context += `\n📍 WORLDS (${worlds.length}):\n`
+    worlds.forEach((w: Node) => {
+      const data = w.data as any
+      context += `  - ${data.genre || 'Unknown genre'}: ${data.setting || 'No setting'} (tone: ${data.tone || 'unspecified'})\n`
+    })
+  }
+  
+  if (characters.length > 0) {
+    context += `\n👤 CHARACTERS (${characters.length}):\n`
+    characters.forEach((c: Node) => {
+      const data = c.data as any
+      context += `  - ${data.name || 'Unnamed'}`
+      if (data.traits) context += ` | Traits: ${data.traits}`
+      if (data.goals) context += ` | Goals: ${data.goals}`
+      context += '\n'
+    })
+  }
+  
+  if (beats.length > 0) {
+    context += `\n📖 PLOT BEATS (${beats.length}):\n`
+    beats.forEach((b: Node) => {
+      const data = b.data as any
+      context += `  - ${data.name || 'Unnamed'}`
+      if (data.type) context += ` [${data.type}]`
+      if (data.description) context += `: ${data.description}`
+      context += '\n'
+    })
+  }
+  
+  if (state.edges.length > 0) {
+    context += `\n🔗 CONNECTIONS (${state.edges.length}):\n`
+    state.edges.forEach((e: Edge) => {
+      const source = state.nodes.find((n: Node) => n.id === e.source)
+      const target = state.nodes.find((n: Node) => n.id === e.target)
+      const sourceName = source?.data?.name || source?.data?.genre || e.source
+      const targetName = target?.data?.name || target?.data?.genre || e.target
+      context += `  - ${sourceName} → ${targetName}${e.label ? ` (${e.label})` : ''}\n`
+    })
+  }
+  
+  if (worlds.length === 0 && characters.length === 0 && beats.length === 0) {
+    context += '\nThe canvas is currently empty.\n'
+  }
+  
+  context += '\n===========================\n'
+  return context
+}
 
 // Grid-based positioning to avoid overlaps (must match VisualEditor.tsx)
 const GRID_COL_WIDTH = 320
@@ -81,15 +139,42 @@ export function useCoPilot() {
             role: 'system',
             content: `You are the Spectator AI Co-Pilot. You help users build interactive storytelling graphs.
 You have access to tools that directly modify the visual graph canvas the user is looking at.
-When asked to add characters, worlds, or plot beats, USE YOUR TOOLS to place them on the canvas.
-Do not ask for permission if the user implies they want something added. Just add it.
-If the user asks you to connect things, use the connect_nodes tool.`,
+
+${formatGraphContext(graphState)}
+
+IMPORTANT INSTRUCTIONS:
+- You have access to the current story canvas state shown above.
+- Before creating new content, check if it already exists using the get_graph_state tool.
+- When answering questions about characters, worlds, or the story, reference the existing graph state above.
+- If asked "who is [character name]?" or similar, describe the character using the information in the canvas state.
+- If asked about the world setting, describe it using the world information above.
+- When asked to add characters, worlds, or plot beats, USE YOUR TOOLS to place them on the canvas.
+- Do not ask for permission if the user implies they want something added. Just add it.
+- If the user asks you to connect things, use the connect_nodes tool.
+- You can use the get_graph_state tool to refresh the current state at any time.`,
           },
           ...newMessages,
         ],
         abortSignal: abortControllerRef.current.signal,
         maxSteps: 5,
         tools: {
+          get_graph_state: {
+            description: 'Get the current graph state including all worlds, characters, plot beats, and their connections. Use this to check if content already exists before creating new items, or to answer questions about the current story state.',
+            parameters: z.object({}),
+            execute: async () => {
+              const worlds = graphState.nodes.filter((n: Node) => n.type === 'world').map((n: Node) => ({ id: n.id, ...n.data }))
+              const characters = graphState.nodes.filter((n: Node) => n.type === 'character').map((n: Node) => ({ id: n.id, ...n.data }))
+              const beats = graphState.nodes.filter((n: Node) => n.type === 'beat').map((n: Node) => ({ id: n.id, ...n.data }))
+              const connections = graphState.edges.map((e: Edge) => ({
+                source: e.source,
+                target: e.target,
+                sourceName: graphState.nodes.find((n: Node) => n.id === e.source)?.data?.name || graphState.nodes.find((n: Node) => n.id === e.source)?.data?.genre || e.source,
+                targetName: graphState.nodes.find((n: Node) => n.id === e.target)?.data?.name || graphState.nodes.find((n: Node) => n.id === e.target)?.data?.genre || e.target,
+                label: e.label,
+              }))
+              return { worlds, characters, beats, connections }
+            },
+          },
           add_world: {
             description: 'Add a World node to the canvas',
             parameters: z.object({
