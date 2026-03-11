@@ -115,6 +115,16 @@ export function VisualEditor() {
 
   const handleGenerate = async () => {
     if (isGenerating || playState.status === 'streaming') return
+    
+    // Check for API key before generating
+    if (!playState.engineConfig.apiKey) {
+      playDispatch({ 
+        type: 'GENERATION_ERROR', 
+        error: 'Please set your API key in Engine Settings before generating.' 
+      })
+      return
+    }
+    
     setIsGenerating(true)
 
     // 1. Compile Graph to JSON
@@ -140,6 +150,10 @@ export function VisualEditor() {
       })
     } catch (err) {
       console.error('Generation failed:', err)
+      playDispatch({
+        type: 'GENERATION_ERROR',
+        error: err instanceof Error ? err.message : 'Story generation failed. Please check your API key and try again.',
+      })
     } finally {
       setIsGenerating(false)
     }

@@ -5,6 +5,7 @@ import { usePlayground } from '../../stores/playground.js'
 import { VisualEditor } from '../graph/VisualEditor.js'
 import { ErrorState } from '../shared/ErrorState.js'
 import { useBiDirectionalSync } from '../../hooks/useBiDirectionalSync.js'
+import { ReactFlowProvider } from '@xyflow/react'
 
 export function MainPanel() {
   const { state } = usePlayground()
@@ -16,7 +17,9 @@ export function MainPanel() {
   return (
     <main className={`flex flex-1 flex-col ${state.viewMode === 'form' ? 'overflow-y-auto p-6 flex-1' : 'w-full h-full p-0'} bg-zinc-900`}>
       {state.viewMode === 'graph' ? (
-        <VisualEditor />
+        <ReactFlowProvider>
+          <VisualEditor />
+        </ReactFlowProvider>
       ) : (
         <>
           {!hasOutput && !isGenerating ? (
