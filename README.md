@@ -17,6 +17,12 @@
 
 Most AI story generators produce a single blob of text. Spectator treats narrative as **structured data** — typed scenes, character state tracking across beats, emotional arcs, and a draft-critique-revise pipeline — all with first-class streaming support.
 
+## Webapp Visual Co-Pilot
+
+Spectator includes a real-time visual editor and AI Co-Pilot for building scenes, characters, and plot beats on an interactive graph canvas.
+
+https://github.com/ivanyou028/spectator/raw/main/assets/copilot-demo.mp4
+
 ## Quick Start
 
 ```bash
