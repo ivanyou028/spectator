@@ -46,14 +46,10 @@ function VisualEditorInner() {
 
 
   // We connect react-flow's internal state mechanism to allow selection changes
-  // but NOT position changes or edge changes, since the graph is immutable.
+  // and dimensions, but we explicitly disable dragging via nodesDraggable={false}.
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      // Filter out position changes to enforce immutability
-      const allowedChanges = changes.filter(c => c.type === 'select' || c.type === 'dimensions')
-      if (allowedChanges.length > 0) {
-        graphDispatch({ type: 'ON_NODES_CHANGE', payload: allowedChanges })
-      }
+      graphDispatch({ type: 'ON_NODES_CHANGE', payload: changes })
     },
     [graphDispatch]
   )
