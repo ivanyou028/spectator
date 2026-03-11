@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react'
 import { usePlayground } from '../../stores/playground.js'
 import { useLocalStorage } from '../../hooks/useLocalStorage.js'
 
+// Event name for cross-component communication
+const EXPAND_SETTINGS_EVENT = 'spectator:expand-settings'
+
 export function EngineSettings() {
   const { state, dispatch } = usePlayground()
   const [open, setOpen] = useState(false)
@@ -22,13 +25,27 @@ export function EngineSettings() {
     }
   }, [state.engineConfig.apiKey, savedKey, savedProvider, dispatch])
 
-  // Handle auto-expand from banner/error state clicks
+  // Handle auto-expand from banner/error state clicks - localStorage approach
   useEffect(() => {
     if (shouldExpandSettings) {
+      console.log('[EngineSettings] Expanding from localStorage flag')
       setOpen(true)
       setShouldExpandSettings(false)
     }
   }, [shouldExpandSettings, setShouldExpandSettings])
+
+  // Handle auto-expand from custom event (more reliable for race conditions)
+  useEffect(() => {
+    const handleExpandEvent = (e: CustomEvent) => {
+      console.log('[EngineSettings] Received expand event:', e.detail)
+      setOpen(true)
+    }
+
+    window.addEventListener(EXPAND_SETTINGS_EVENT, handleExpandEvent as EventListener)
+    return () => {
+      window.removeEventListener(EXPAND_SETTINGS_EVENT, handleExpandEvent as EventListener)
+    }
+  }, [])
 
   function updateConfig(payload: Partial<typeof state.engineConfig>) {
     dispatch({ type: 'SET_ENGINE_CONFIG', payload })

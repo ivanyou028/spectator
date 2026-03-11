@@ -8,6 +8,9 @@ interface OnboardingBannerProps {
   hasApiKey: boolean
 }
 
+// Event name for cross-component communication
+const EXPAND_SETTINGS_EVENT = 'spectator:expand-settings'
+
 export function OnboardingBanner({ hasApiKey }: OnboardingBannerProps) {
   const { showBanner, dismiss } = useOnboarding(hasApiKey)
   const [, setShouldExpandSettings] = useLocalStorage('spectator-settings-should-expand', false)
@@ -17,8 +20,8 @@ export function OnboardingBanner({ hasApiKey }: OnboardingBannerProps) {
   // Scroll and focus logic - extracted to reuse after view switch
   const performScrollAndFocus = () => {
     // Scroll to the EngineSettings section
-    const engineSettingsSection = document.querySelector('[data-engine-settings]')
-    const sidebar = document.querySelector('aside')
+    const engineSettingsSection = document.querySelector('[data-engine-settings]') as HTMLElement | null
+    const sidebar = document.querySelector('aside') as HTMLElement | null
     
     console.log('[OnboardingBanner] engineSettingsSection:', engineSettingsSection)
     console.log('[OnboardingBanner] sidebar:', sidebar)
@@ -39,7 +42,7 @@ export function OnboardingBanner({ hasApiKey }: OnboardingBannerProps) {
       console.log('[OnboardingBanner] ERROR: No sidebar or engine settings found')
     }
 
-    // Focus the API key input after accordion expands
+    // Focus the API key input after accordion expands (wait longer for animation)
     const tryFocusInput = (attempts = 0) => {
       const apiKeyInput = document.querySelector('[data-api-key-input]') as HTMLInputElement
       console.log(`[OnboardingBanner] Focus attempt ${attempts}, found:`, !!apiKeyInput)
@@ -48,30 +51,34 @@ export function OnboardingBanner({ hasApiKey }: OnboardingBannerProps) {
         apiKeyInput.focus()
         apiKeyInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
         console.log('[OnboardingBanner] Input focused')
-      } else if (attempts < 20) {
-        setTimeout(() => tryFocusInput(attempts + 1), 50)
+      } else if (attempts < 30) {
+        setTimeout(() => tryFocusInput(attempts + 1), 100)
       } else {
-        console.log('[OnboardingBanner] ERROR: Could not find input')
+        console.log('[OnboardingBanner] ERROR: Could not find input after 3 seconds')
       }
     }
     
-    setTimeout(tryFocusInput, 100)
+    // Wait for accordion animation (300ms) + buffer
+    setTimeout(tryFocusInput, 350)
   }
 
   // Handle scroll to settings and expand
   const handleAddKey = () => {
     console.log('[OnboardingBanner] handleAddKey clicked!')
     
-    // Set the flag to expand EngineSettings
+    // Set the flag to expand EngineSettings (for components already mounted)
     setShouldExpandSettings(true)
-    console.log('[OnboardingBanner] setShouldExpandSettings(true)')
+    
+    // Dispatch a custom event for immediate cross-component communication
+    window.dispatchEvent(new CustomEvent(EXPAND_SETTINGS_EVENT, { detail: { timestamp: Date.now() } }))
+    console.log('[OnboardingBanner] Dispatched expand-settings event')
 
     // If in Graph View, switch to Form View first
     if (state.viewMode === 'graph') {
       console.log('[OnboardingBanner] Switching to form view')
       dispatch({ type: 'SET_VIEW_MODE', payload: 'form' })
       // Wait for Sidebar to mount after view switch
-      setTimeout(() => performScrollAndFocus(), 150)
+      setTimeout(() => performScrollAndFocus(), 200)
     } else {
       // Already in Form View
       performScrollAndFocus()
