@@ -64,6 +64,18 @@ export function VisualEditor() {
   const { generate } = useEngine()
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null)
+  const { fitView } = useReactFlow()
+  const prevNodeCountRef = useRef(graphState.nodes.length)
+
+  // Auto-fit view when new nodes are added
+  useEffect(() => {
+    const currentNodeCount = graphState.nodes.length
+    if (currentNodeCount > prevNodeCountRef.current && currentNodeCount > 0) {
+      // New node was added, fit view with animation
+      fitView({ padding: 0.2, duration: 400 })
+    }
+    prevNodeCountRef.current = currentNodeCount
+  }, [graphState.nodes.length, fitView])
 
 
   // We connect react-flow's internal state mechanism directly to our global context actions
