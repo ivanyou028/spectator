@@ -6,6 +6,7 @@ import { useGraph } from '../stores/graph.js'
 import { usePlayground } from '../stores/playground.js'
 import type { Node, Edge } from '@xyflow/react'
 import type { GraphState } from '../stores/graph.js'
+import { getNextPosition } from '../utils/positioning.js'
 
 // Helper to format graph state for context
 function formatGraphContext(state: GraphState): string {
@@ -64,39 +65,7 @@ function formatGraphContext(state: GraphState): string {
   return context
 }
 
-// Grid-based positioning to avoid overlaps (must match VisualEditor.tsx)
-const GRID_COL_WIDTH = 400
-const GRID_ROW_HEIGHT = 350
-const NODE_WIDTH = 350
-const NODE_HEIGHT = 300
-
-function getNextPosition(nodes: Node[], type: string): { x: number; y: number } {
-  const typeIndex = nodes.filter(n => n.type === type).length
-  const typeOffset = type === 'world' ? 0 : type === 'character' ? 40 : 80
-  
-  // Search for non-overlapping position
-  for (let row = 0; row < 20; row++) {
-    for (let col = 0; col < 3; col++) {
-      const x = col * GRID_COL_WIDTH + 100 + typeOffset
-      const y = row * GRID_ROW_HEIGHT + 80 + (typeIndex * 20)
-      
-      // Check collision
-      const overlaps = nodes.some(node => {
-        const dx = Math.abs(node.position.x - x)
-        const dy = Math.abs(node.position.y - y)
-        return dx < NODE_WIDTH && dy < NODE_HEIGHT
-      })
-      
-      if (!overlaps) return { x, y }
-    }
-  }
-  
-  // Fallback
-  return { 
-    x: 100 + Math.random() * 200, 
-    y: 100 + Math.random() * 200 
-  }
-}
+// Note: getNextPosition is imported from '../utils/positioning.js'
 
 export function useCoPilot() {
   const { state: playState } = usePlayground()

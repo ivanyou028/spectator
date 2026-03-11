@@ -26,6 +26,7 @@ import { CharacterNode } from './nodes/CharacterNode.js'
 import { BeatNode } from './nodes/BeatNode.js'
 import { compileGraph } from '../../utils/graph-compiler.js'
 import { CoPilotChat } from './CoPilotChat.js'
+import { getNextPosition } from '../../utils/positioning.js'
 
 const NODE_TYPES = {
   world: WorldNode,
@@ -36,47 +37,7 @@ const NODE_TYPES = {
 // Ensure unique IDs
 let idCounter = 1
 
-// Grid-based positioning to avoid overlaps
-const COL_WIDTH = 400
-const ROW_HEIGHT = 350
-const COLS = 3
-
-// Approximate node dimensions for collision detection
-const NODE_WIDTH = 300
-const NODE_HEIGHT = 320
-
-function getNextPosition(nodes: Node[], type: string): { x: number; y: number } {
-  // Type-based column offset for grouping (0, 1, 2 for world, character, beat)
-  const typeOrder = ['world', 'character', 'beat']
-  const typeColOffset = typeOrder.indexOf(type) * 40
-
-  // Find next available position with collision detection
-  for (let row = 0; row < 20; row++) {
-    for (let col = 0; col < COLS; col++) {
-      const x = col * COL_WIDTH + 100 + typeColOffset
-      const y = row * ROW_HEIGHT + 80
-
-      // Check if this position overlaps any existing node
-      const overlaps = nodes.some(node => {
-        const dx = Math.abs(node.position.x - x)
-        const dy = Math.abs(node.position.y - y)
-        return dx < NODE_WIDTH && dy < NODE_HEIGHT
-      })
-
-      if (!overlaps) {
-        return { x, y }
-      }
-    }
-  }
-
-  // Fallback: expand beyond grid with random offset
-  const fallbackRow = Math.floor(nodes.length / COLS) + 1
-  const fallbackCol = nodes.length % COLS
-  return {
-    x: fallbackCol * COL_WIDTH + 100 + typeColOffset + Math.random() * 50,
-    y: fallbackRow * ROW_HEIGHT + 80 + Math.random() * 50,
-  }
-}
+// Note: getNextPosition is imported from '../../utils/positioning.js'
 
 function VisualEditorInner() {
   const { state: graphState, dispatch: graphDispatch } = useGraph()
